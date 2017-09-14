@@ -1,5 +1,7 @@
 # chain-links.py
 
+import nltk
+
 import pandas as pd
 
 from tweepy.streaming import StreamListener
@@ -99,7 +101,15 @@ class AdjectiveCountModule(Module):
         self.set_mod_type(PRECLASS_MOD)
 
     def process(self, data):
-        data["features"]["adj-count"] = 2
+        if "text" in data.keys():
+            text = data["text"]
+            tokens = nltk.word_tokenize(text)
+            pos_tags = nltk.pos_tag(tokens)
+            adj_count = 0
+            for word, tag in pos_tags:
+                if tag[0:2] == "JJ":
+                    adj_count += 1
+            data["features"]["adj-count"] = adj_count
         super().process(data)
 
 
@@ -122,8 +132,8 @@ class OutputModule(Module):
             text = data["text"]
         else:
             text = "(text not found)"
-        data = "Text \"{}\" with classification \"{}\"".format(
-            text, data["classification"])
+        data = "Text \"{}\"\n\twith features {}\n\twith classification \"{}\""\
+               .format(text, data["features"], data["classification"])
         super().process(data)
 
         
@@ -246,7 +256,7 @@ ts.set_access_token(config["access_token"])
 ts.set_access_token_secret(config["access_token_secret"])
 ts.set_consumer_key(config["consumer_key"])
 ts.set_consumer_secret(config["consumer_secret"])
-ts.set_column_format([])
+ts.set_column_format(["text", "user"])
 ts.set_term("thomasjring")
 
 
@@ -255,4 +265,4 @@ c.add_mod(AdjectiveCountModule())
 c.add_mod(NBClassifierModule())
 c.add_mod(OutputModule())
 c.set_handler(handler)
-c.start_if_ready()
+# c.start_if_ready()
