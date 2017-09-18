@@ -29,12 +29,15 @@ c.add_mod(sm.OutputModule())
 
 # Create a dummy handler
 def handler(data):
-    print(data)
+    text = data["text"]
+    features = data["features"]
+    classif = data["classification"]  # 1 = positive, 0 = negative
+    print("Text: \"{}\"\n\tFeatures: \"{}\"\n\tClassification: \"{}\""
+          .format(text, features, classif))
 
 
 c.set_handler(handler)
 
-input()
+input("Press enter to start fetching tweets.")
 
 c.start_if_ready()
-

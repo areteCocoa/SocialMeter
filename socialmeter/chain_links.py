@@ -1,8 +1,6 @@
 # chain-links.py
 
 import nltk
-import pandas as pd
-# import numpy as np
 from sklearn.naive_bayes import GaussianNB
 
 
@@ -45,8 +43,6 @@ class Module:
 
     def column_format(self):
         return self.__column_format
-
-
 
 
 # TODO: Implement a general FEModule that takes a FE class and
@@ -123,7 +119,7 @@ class NBClassifierModule(Module):
             features.append([v])
         p = self.classifier.predict(features)
         print("Predict: {}".format(p))
-        if p == 0:
+        if p == '0':
             data["classification"] = "negative"
         else:
             data["classification"] = "positive"
@@ -135,14 +131,14 @@ class OutputModule(Module):
         self.set_mod_type(OUTPUT_MOD)
 
     def process(self, data):
-        text = None
-        if "text" in data.keys():
-            text = data["text"]
-        else:
-            text = "(text not found)"
-        data = "Text \"{}\"\n\twith features {}\n\twith classification \"{}\""\
-               .format(text, data["features"], data["classification"])
-        super().process(data)
+        # Convert dataframe to dict
+        d = data.to_dict()
+
+        # If we don't have text
+        if "text" not in d.keys():
+            d["text"] = "(text not found)"
+
+        super().process(d)
 
 
 # LINKS
