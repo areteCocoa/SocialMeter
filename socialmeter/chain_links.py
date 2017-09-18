@@ -5,11 +5,13 @@ import pandas as pd
 # import numpy as np
 from sklearn.naive_bayes import GaussianNB
 
-from tweepy.streaming import StreamListener
-from tweepy import OAuthHandler
-from tweepy import Stream
 
-import json
+DEBUG = True
+
+
+def dlog(s):
+    if DEBUG is True:
+        print(s)
 
 
 INPUT_MOD = "input-module"
@@ -39,62 +41,13 @@ class Module:
 
     def set_column_format(self, c_format):
         self.__column_format = c_format[:]
+        dlog("Set column format for Module {} to {}.".format(self, c_format))
 
     def column_format(self):
         return self.__column_format
 
 
-class TwitterStreamModule(Module, StreamListener):
-    # Object
-    def __init__(self):
-        self.set_mod_type(INPUT_MOD)
 
-    # Module
-    def process(self, data):
-        super().process(data)
-
-    def set_term(self, term):
-        self.term = term
-
-    def set_access_token(self, token):
-        self.access_token = token
-
-    def set_access_token_secret(self, secret):
-        self.access_token_secret = secret
-
-    def set_consumer_key(self, key):
-        self.consumer_key = key
-
-    def set_consumer_secret(self, secret):
-        self.consumer_secret = secret
-
-    def start(self):
-        auth = OAuthHandler(self.consumer_key, self.consumer_secret)
-        auth.set_access_token(self.access_token, self.access_token_secret)
-        self.stream = Stream(auth, self)
-        self.stream.filter(track=self.term)
-
-    def parse_response(self, response):
-        parsed = json.loads(response)
-        if self.column_format() is None:
-            print("Warning: did not find a column format for\
- TwitterStreamModule, using all the keys from the Twitter objects")
-            self.set_column_format(parsed.keys())
-        series_data = dict()
-        for k in self.column_format():
-            if k in parsed.keys():
-                series_data[k] = parsed[k]
-        df = pd.Series(series_data)
-
-        self.handler(self, df)
-
-    # StreamListener
-    def on_data(self, data):
-        self.parse_response(data)
-        return True
-
-    def on_error(self, status_code):
-        print("There was a status error! {}".format(status_code))
 
 # TODO: Implement a general FEModule that takes a FE class and
 # uses it to extract the features
@@ -142,7 +95,7 @@ class NBClassifierModule(Module):
         # This is a temporary implementation of a long-term plan for
         # the framework architecture. Likely most of the functionality
         # except for the training will be moved to the user's responsibility.
-        f = open("../sentiment-analysis-dataset.csv", 'r')
+        f = open(training_data, 'r')
         features = list()
         classifications = list()
         f.readline()  # Throwaway column line in the file
@@ -199,6 +152,7 @@ class Link:
         self.link_type = link_type
         self.mods = list()
         self.column_format = None
+        dlog("Finished initializing Link {}.".format(self))
 
     def add_mod(self, mod):
         self.mods.append(mod)
@@ -223,6 +177,7 @@ class Link:
 
     def set_column_format(self, c_format):
         self.column_format = c_format[:]
+        dlog("Set column format for link {} to {}.".format(self, c_format))
         for m in self.mods:
             m.set_column_format(self.column_format)
 
@@ -244,6 +199,8 @@ class Chain:
 
         self.output_link = Link(self, OUTPUT_LINK)
         self.output_link.set_handler(self.link_finished)
+
+        dlog("Finished initializing chain {}.".format(self))
 
     def set_handler(self, handler):
         self.handler = handler
@@ -293,38 +250,3 @@ class Chain:
             self.output_link.process(data)
         else:
             self.handler(data)
-
-
-def handler(data):
-    print(data)
-
-
-#  TEST
-c = Chain()
-c.column_format = ["username", "text", "classification", "features"]
-
-# Load JSON configuration add use it to configure the TSModule
-config = json.load(open("../config.json", 'r'))["twitter"]
-ts = TwitterStreamModule()
-ts.set_access_token(config["access_token"])
-ts.set_access_token_secret(config["access_token_secret"])
-ts.set_consumer_key(config["consumer_key"])
-ts.set_consumer_secret(config["consumer_secret"])
-ts.set_column_format(["text", "user"])
-ts.set_term("thomasjring")
-c.add_mod(ts)
-
-# Load the preclassification modules
-adjc = AdjectiveCountModule()
-c.add_mod(adjc)
-
-# Load the classification module with data
-nbc = NBClassifierModule()
-nbc.train(c.preclass_link, None)
-
-
-c.add_mod(AdjectiveCountModule())
-c.add_mod(nbc)
-c.add_mod(OutputModule())
-c.set_handler(handler)
-# c.start_if_ready()
