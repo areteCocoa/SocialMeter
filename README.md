@@ -1,10 +1,8 @@
-socialmeter
-===========
+# Overview
+Socialmeter is a flexible, extensible sentiment analysis framework.
 
------
-
-.. contents:: **Table of Contents**
-    :backlinks: none
+# Usage
+(Currently under construction)
 
 License
 -------
