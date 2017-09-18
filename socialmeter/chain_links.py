@@ -2,7 +2,7 @@
 
 import nltk
 import pandas as pd
-import numpy as np
+# import numpy as np
 from sklearn.naive_bayes import GaussianNB
 
 from tweepy.streaming import StreamListener
@@ -43,7 +43,7 @@ class Module:
     def column_format(self):
         return self.__column_format
 
-        
+
 class TwitterStreamModule(Module, StreamListener):
     # Object
     def __init__(self):
@@ -55,7 +55,7 @@ class TwitterStreamModule(Module, StreamListener):
 
     def set_term(self, term):
         self.term = term
-        
+
     def set_access_token(self, token):
         self.access_token = token
 
@@ -67,7 +67,7 @@ class TwitterStreamModule(Module, StreamListener):
 
     def set_consumer_secret(self, secret):
         self.consumer_secret = secret
-        
+
     def start(self):
         auth = OAuthHandler(self.consumer_key, self.consumer_secret)
         auth.set_access_token(self.access_token, self.access_token_secret)
@@ -85,7 +85,7 @@ class TwitterStreamModule(Module, StreamListener):
             if k in parsed.keys():
                 series_data[k] = parsed[k]
         df = pd.Series(series_data)
-        
+
         self.handler(self, df)
 
     # StreamListener
@@ -118,7 +118,7 @@ class AdjectiveCountModule(Module):
             data["features"]["adj-count"] = AdjectiveCounterFE.extract(text)
         super().process(data)
 
-        
+
 class AdjectiveCounterFE():
     def extract(text):
         tokens = nltk.word_tokenize(text)
@@ -128,7 +128,7 @@ class AdjectiveCounterFE():
             if tag[0:2] == "JJ":
                 adj_count += 1
         return adj_count
-        
+
 
 class NBClassifierModule(Module):
     def __init__(self):
@@ -145,7 +145,7 @@ class NBClassifierModule(Module):
         f = open("../sentiment-analysis-dataset.csv", 'r')
         features = list()
         classifications = list()
-        f.readline() #Throwaway line in the file
+        f.readline()  # Throwaway column line in the file
         for i in range(1, 10):
             # Read in the file, run it through the feature identifiers and
             # store the features with the classifications.
@@ -176,7 +176,7 @@ class NBClassifierModule(Module):
             data["classification"] = "positive"
         super().process(data)
 
-        
+
 class OutputModule(Module):
     def __init__(self):
         self.set_mod_type(OUTPUT_MOD)
@@ -191,7 +191,7 @@ class OutputModule(Module):
                .format(text, data["features"], data["classification"])
         super().process(data)
 
-        
+
 # LINKS
 class Link:
     def __init__(self, owner, link_type):
@@ -209,7 +209,7 @@ class Link:
 
     def process(self, data):
         self.mods[0].process(data)
-        
+
     def handle_mod_data(self, sender, data):
         if sender.identifier == len(self.mods):
             # Finished all the modules in the link, time to pass up to
@@ -228,20 +228,20 @@ class Link:
 
     def is_empty(self):
         return len(self.mods) == 0
-        
+
 
 # CHAINS
 class Chain:
     def __init__(self):
         self.input_link = Link(self, INPUT_LINK)
         self.input_link.set_handler(self.link_finished)
-        
+
         self.preclass_link = Link(self, PRECLASS_LINK)
         self.preclass_link.set_handler(self.link_finished)
-        
+
         self.class_link = Link(self, CLASS_LINK)
         self.class_link.set_handler(self.link_finished)
-        
+
         self.output_link = Link(self, OUTPUT_LINK)
         self.output_link.set_handler(self.link_finished)
 
@@ -250,12 +250,12 @@ class Chain:
 
     def set_column_format(self, c_format):
         self.column_format = c_format
-        
+
         self.input_link.set_column_format(c_format)
         self.preclass_link.set_column_format(c_format)
         self.class_link.set_column_format(c_format)
         self.output_link.set_column_format(c_format)
-        
+
     def add_mod(self, mod):
         mod_type = mod.mod_type
         if mod_type == INPUT_MOD:
@@ -297,10 +297,9 @@ class Chain:
 
 def handler(data):
     print(data)
-    
 
-## TEST
 
+#  TEST
 c = Chain()
 c.column_format = ["username", "text", "classification", "features"]
 
