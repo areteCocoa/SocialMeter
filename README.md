@@ -4,8 +4,7 @@ Socialmeter is a flexible, extensible sentiment analysis framework.
 # Usage
 (Currently under construction)
 
-License
--------
+# License
 
 socialmeter is distributed under the terms of both
 
