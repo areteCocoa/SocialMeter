@@ -1,6 +1,6 @@
 # twitterstream.py
 
-from socialmeter.chain_links import Module, INPUT_MOD
+from ..chain_links import Module, INPUT_MOD
 
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler

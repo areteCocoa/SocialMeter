@@ -1,9 +1,5 @@
 # chain-links.py
 
-import nltk
-from sklearn.naive_bayes import GaussianNB
-
-
 DEBUG = True
 
 
@@ -45,100 +41,20 @@ class Module:
         return self.__column_format
 
 
-# TODO: Implement a general FEModule that takes a FE class and
-# uses it to extract the features
-# class FeatureExtractorModule(Module):
-#     def __init__(self, extractor_class):
-#         self.extractor_class = extractor_class
-
-#     def process(self, data):
-#         if "text" in data.keys():
-#             text = data["text"]
-
-
-class AdjectiveCountModule(Module):
-    def __init__(self):
+class FeatureExtractorModule(Module):
+    def __init__(self, extractor_class):
         self.set_mod_type(PRECLASS_MOD)
-        self.feature_extractor = AdjectiveCounterFE
+        self.feature_extractor = extractor_class
+        self.key = "{}".format(extractor_class)
+
+    def set_key(self, key):
+        self.key = key
 
     def process(self, data):
         if "text" in data.keys():
             text = data["text"]
-            data["features"]["adj-count"] = AdjectiveCounterFE.extract(text)
+            data[self.key] = self.feature_extractor.extract(text)
         super().process(data)
-
-
-class AdjectiveCounterFE():
-    def extract(text):
-        tokens = nltk.word_tokenize(text)
-        pos_tags = nltk.pos_tag(tokens)
-        adj_count = 0
-        for word, tag in pos_tags:
-            if tag[0:2] == "JJ":
-                adj_count += 1
-        return adj_count
-
-
-class NBClassifierModule(Module):
-    def __init__(self):
-        self.set_mod_type(CLASS_MOD)
-        self.classifier = GaussianNB()
-
-    def train(self, preclass_link, training_data):
-        # Load the file, format the data to our specification
-        # and train the classifier
-        #
-        # This is a temporary implementation of a long-term plan for
-        # the framework architecture. Likely most of the functionality
-        # except for the training will be moved to the user's responsibility.
-        f = open(training_data, 'r')
-        features = list()
-        classifications = list()
-        f.readline()  # Throwaway column line in the file
-        for i in range(1, 10):
-            # Read in the file, run it through the feature identifiers and
-            # store the features with the classifications.
-            s = f.readline().split(',')
-            sentiment = s[1]
-            text = s[3].strip()
-
-            # Run through the preclass chain
-            classif = list()
-            for mod in preclass_link.mods:
-                fe = mod.feature_extractor
-                classif.append(fe.extract(text))
-            features.append(classif)
-            classifications.append(sentiment)
-        self.classifer = self.classifier.fit(features, classifications)
-
-    def process(self, data):
-        # Format the features so we can classify them
-        features_dict = data["features"]
-        features = list()
-        for v in features_dict.values():
-            features.append([v])
-        p = self.classifier.predict(features)
-        print("Predict: {}".format(p))
-        if p == '0':
-            data["classification"] = "negative"
-        else:
-            data["classification"] = "positive"
-        super().process(data)
-
-
-class OutputModule(Module):
-    def __init__(self):
-        self.set_mod_type(OUTPUT_MOD)
-
-    def process(self, data):
-        # Convert dataframe to dict
-        d = data.to_dict()
-
-        # If we don't have text
-        if "text" not in d.keys():
-            d["text"] = "(text not found)"
-
-        super().process(d)
 
 
 # LINKS
@@ -215,6 +131,10 @@ class Chain:
             self.input_link.add_mod(mod)
         elif mod_type == PRECLASS_MOD:
             self.preclass_link.add_mod(mod)
+            
+            # We have to add a column for the new feature            
+            new_columns = self.column_format + [mod.key]
+            self.set_column_format(new_columns)
         elif mod_type == CLASS_MOD:
             self.class_link.add_mod(mod)
         elif mod_type == OUTPUT_MOD:
