@@ -1,12 +1,5 @@
 # chain-links.py
 
-DEBUG = True
-
-
-def dlog(s):
-    if DEBUG is True:
-        print(s)
-
 
 INPUT_MOD = "input-module"
 PRECLASS_MOD = "preclass-module"
@@ -35,7 +28,6 @@ class Module:
 
     def set_column_format(self, c_format):
         self.__column_format = c_format[:]
-        dlog("Set column format for Module {} to {}.".format(self, c_format))
 
     def column_format(self):
         return self.__column_format
@@ -64,7 +56,6 @@ class Link:
         self.link_type = link_type
         self.mods = list()
         self.column_format = None
-        dlog("Finished initializing Link {}.".format(self))
 
     def add_mod(self, mod):
         self.mods.append(mod)
@@ -89,7 +80,6 @@ class Link:
 
     def set_column_format(self, c_format):
         self.column_format = c_format[:]
-        dlog("Set column format for link {} to {}.".format(self, c_format))
         for m in self.mods:
             m.set_column_format(self.column_format)
 
@@ -112,8 +102,6 @@ class Chain:
         self.output_link = Link(self, OUTPUT_LINK)
         self.output_link.set_handler(self.link_finished)
 
-        dlog("Finished initializing chain {}.".format(self))
-
     def set_handler(self, handler):
         self.handler = handler
 
@@ -131,8 +119,8 @@ class Chain:
             self.input_link.add_mod(mod)
         elif mod_type == PRECLASS_MOD:
             self.preclass_link.add_mod(mod)
-            
-            # We have to add a column for the new feature            
+
+            # We have to add a column for the new feature
             new_columns = self.column_format + [mod.key]
             self.set_column_format(new_columns)
         elif mod_type == CLASS_MOD:
