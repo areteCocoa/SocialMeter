@@ -4,6 +4,9 @@ __version__ = '0.2.0'
 from socialmeter.chain_links import Chain
 from socialmeter.chain_links import FeatureExtractorModule
 
+# === Tests ===
+from socialmeter.test.kfold import KFoldValidationTest
+
 # === Individual mods ===
 # == Input Mods ==
 # from socialmeter.twitterstream import TwitterStreamModule

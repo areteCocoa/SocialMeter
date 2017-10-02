@@ -1,6 +1,5 @@
 # adjcount.py
 
-from .. import chain_links as cl
 import nltk
 
 

@@ -19,7 +19,7 @@ def load_sentiment_dataset(n, preclass_link):
     features = list()
     classifications = list()
 
-    for i in range(1, n):
+    for i in range(1, n+1):
         s = f.readline().split(',')
         sentiment = s[1]
         text = s[3].strip()
@@ -36,9 +36,16 @@ def load_sentiment_dataset(n, preclass_link):
     return (features, classifications)
 
 
+# Create a dummy handler
+def handler(data):
+    text = data["text"]
+    features = data["features"]
+    classif = data["classification"]  # 1 = positive, 0 = negative
+    print("Text: \"{}\"\n\tFeatures: \"{}\"\n\tClassification: \"{}\""
+          .format(text, features, classif))
+
+
 # The actual demo
-
-
 # Instantiate the chain
 c = sm.Chain()
 c.set_column_format(["username", "text", "classification"])
@@ -56,31 +63,31 @@ adjc.key = "adjective-count"
 c.add_mod(adjc)
 
 # Load the classification module with data
-# NOTE: We have to prepare the data to fit the classifier by
-# cleaning it up and formatting it
 nbc = cl.NBClassifierModule()
-n_training_entries = 10
-nbc.train(c.preclass_link, load_sentiment_dataset(10, c.preclass_link))
 c.add_mod(nbc)
 
-# Load the output module
-c.add_mod(out.OutputModule())
+# We branch at this point to either demo fetching tweets
+# or show the test suite
+n_e = int(input("How many entries should be loaded from the\
+ test dataset?\n"))
+training_datas = load_sentiment_dataset(n_e, c.preclass_link)
 
+opt = input("Enter \"tweets\" to get tweets, and \"test\" to test \
+the chain.\n")
 
-# Create a dummy handler
-def handler(data):
-    text = data["text"]
-    features = data["features"]
-    classif = data["classification"]  # 1 = positive, 0 = negative
-    print("Text: \"{}\"\n\tFeatures: \"{}\"\n\tClassification: \"{}\""
-          .format(text, features, classif))
+if opt == "tweets":
+    nbc.train(c.preclass_link, training_datas)
 
-
-c.set_handler(handler)
-
-print("Set the chain's column format to: {}".format(c.column_format))
-input("Press enter to start fetching tweets.")
-
-c.start_if_ready()
-
-
+    c.add_mod(nbc)
+    # Load the output module
+    c.add_mod(out.OutputModule())
+    c.set_handler(handler)
+    c.start_if_ready()
+elif opt == "test":
+    k_n = input("How many k-folds would you like to perform?\n")
+    t = sm.KFoldValidationTest()
+    t.set_n_folds(int(k_n))
+    (mean, m_e) = t.test_chain(c, training_datas)
+    print("{}% accuracy, +/- {}%".format(mean, m_e))
+else:
+    print("Unrecognized input \"{}\"".format(opt))
