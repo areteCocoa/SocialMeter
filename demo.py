@@ -78,6 +78,11 @@ negi = sm.FeatureExtractorModule(negi_fe)
 negi.key = "negative-influence"
 c.add_mod(negi)
 
+excaps_fe = pc.ExcessiveCapitalsFE()
+excaps = sm.FeatureExtractorModule(excaps_fe)
+excaps.key = "excessive-caps"
+c.add_mod(excaps)
+
 # Load the classification module with data
 nbc = cl.NBClassifierModule()
 c.add_mod(nbc)

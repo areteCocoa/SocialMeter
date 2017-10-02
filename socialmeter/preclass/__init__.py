@@ -3,3 +3,4 @@
 from .adjcount import AdjectiveCounterFE
 from .adjratio import AdjectiveRatioFE
 from .neginfluence import NegativeInfluenceFE
+from .excesscaps import ExcessiveCapitalsFE
