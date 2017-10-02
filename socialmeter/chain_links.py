@@ -76,9 +76,11 @@ class FeatureExtractorModule(Module):
 class FeatureExtractor():
     def __init__(self):
         self.discrete_format = None
+        self.discrete_values = None
 
-    def set_discrete_format(self, discrete_f):
+    def set_discrete_format(self, discrete_f, discrete_v):
         self.discrete_format = discrete_f
+        self.discrete_values = discrete_v
 
     def extract(self, text):
         return None
@@ -90,7 +92,8 @@ class FeatureExtractor():
             for f in self.discrete_format:
                 cmp_r = self._compare_discrete_f(f, result)
                 if cmp_r is not None:
-                    return cmp_r
+                    return self.discrete_values[
+                        self.discrete_format.index(cmp_r)]
         return None
 
     # Compares a discrete format and a value, returns a discrete
@@ -113,7 +116,6 @@ class FeatureExtractor():
                     return None
         elif t == "gt" or t == "lt":
             # There is one value to compare
-            v = v[0]
             if t == "gt":
                 if v < cmp_v:
                     return d_f
