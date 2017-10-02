@@ -29,4 +29,3 @@ class AdjectiveRatioFE():
                 else:
                     n_neg += 1
         return n_pos / (n_pos + n_neg)
-

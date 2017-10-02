@@ -12,7 +12,7 @@ CLASS_LINK = "classification-link"
 OUTPUT_LINK = "output-link"
 
 
-# MODULES
+# a
 class Module:
     def set_mod_type(self, mod_type):
         self.mod_type = mod_type
@@ -47,6 +47,117 @@ class FeatureExtractorModule(Module):
             text = data["text"]
             data[self.key] = self.feature_extractor.extract(text)
         super().process(data)
+
+
+# FeatureExtractor is class responsible for extracting a specific
+# feature from a text. It is also responsible for discretizing the
+# data.
+#
+# Discrete ranges and formats should be set with .set_discrete_format().
+# It should be set to a list of strings that represent ranges.
+#
+# Discrete Formatting:
+# For a range of values, specify using inclusive and exclusive
+# formatted discrete values.
+# Exclusive:
+# "0.0-0.2"
+#
+# Inclusive:
+# "0.0_0.2"
+#
+# For values that extend after or before a certain value, use
+# greater than or less than. Note that the value should always
+# preceed the operator in these formats.
+# Greater Than:
+# 2.0<
+#
+# Less Than:
+# 5.0>
+class FeatureExtractor():
+    def __init__(self):
+        self.discrete_format = None
+
+    def set_discrete_format(self, discrete_f):
+        self.discrete_format = discrete_f
+
+    def extract(self, text):
+        return None
+
+    def discretize_result(self, result):
+        if self.discrete_format is None:
+            return result
+        else:
+            for f in self.discrete_format:
+                cmp_r = self._compare_discrete_f(f, result)
+                if cmp_r is not None:
+                    return cmp_r
+        return None
+
+    # Compares a discrete format and a value, returns a discrete
+    # format if it fits within that format, None otherwise
+    def _compare_discrete_f(self, d_f, cmp_v):
+        (t, v) = self._parse_d_format(d_f)
+        if t == "i" or t == "e":
+            # There are two values to compare
+            v0 = v[0]
+            v1 = v[1]
+            if t == "e":
+                if v0 < cmp_v and cmp_v < v1:
+                    return d_f
+                else:
+                    return None
+            else:
+                if v0 <= cmp_v and cmp_v <= v1:
+                    return d_f
+                else:
+                    return None
+        elif t == "gt" or t == "lt":
+            # There is one value to compare
+            v = v[0]
+            if t == "gt":
+                if v < cmp_v:
+                    return d_f
+                else:
+                    return None
+            else:
+                if v > cmp_v:
+                    return d_f
+                else:
+                    return None
+        # There was an error and we return none
+        return None
+
+    # An internal method used to parse a discrete format
+    # string. Returns (format_type, (value1, [value2])),
+    # where format_type is a string signifying if it is
+    # an inclusive ("i"), exclusive ("e"), greater than ("gt")
+    # or less than ("lt") discrete format.
+    def _parse_d_format(self, d_format):
+        excl = d_format.split("-")
+        if len(excl) != 1:
+            n1 = float(excl[0])
+            n2 = float(excl[1])
+            return ("e", (n1, n2))
+
+        incl = d_format.split("_")
+        if len(incl) != 1:
+            n1 = float(incl[0])
+            n2 = float(incl[1])
+            return ("i", (n1, n2))
+
+        gt = d_format.split("<")
+        if len(gt) != 1:
+            n = float(gt[0])
+            return ("gt", (n))
+
+        lt = d_format.split(">")
+        if len(lt) != 1:
+            n = float(lt[0])
+            return ("lt", (n))
+
+        # We couldn't find a symbol of a correct discrete
+        # format, so we return None.
+        return None
 
 
 # LINKS
