@@ -73,6 +73,11 @@ adjr = sm.FeatureExtractorModule(adjr_fe)
 adjr.key = "adjective-ratio"
 c.add_mod(adjr)
 
+negi_fe = pc.NegativeInfluenceFE()
+negi = sm.FeatureExtractorModule(negi_fe)
+negi.key = "negative-influence"
+c.add_mod(negi)
+
 # Load the classification module with data
 nbc = cl.NBClassifierModule()
 c.add_mod(nbc)
