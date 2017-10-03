@@ -93,6 +93,12 @@ expunc = sm.FeatureExtractorModule(expunc_fe)
 expunc.key = "excessive-punctuation"
 c.add_mod(expunc)
 
+wc_fe = pc.WordCountFE()
+wc = sm.FeatureExtractorModule(wc_fe)
+wc.key = "word-count"
+c.add_mod(wc)
+c1.add_mod(wc)
+
 # Load the classification module with data
 nbc = cl.NBClassifierModule()
 c.add_mod(nbc)
