@@ -19,6 +19,9 @@ class ValidationTest():
     def test_chain(self, chain, data):
         return 0
 
+    def test_chains(self, chains, data):
+        return 0
+
 
 # KFoldValidationTest is a test that uses K-fold to test
 # a chain.
@@ -53,3 +56,12 @@ class KFoldValidationTest(ValidationTest):
         error_margin = scores.std() * 2
 
         return (mean, error_margin)
+
+    def test_chains(self, chains, data):
+        results = list()
+        for c in chains:
+            print("Testing chain {}.".format(c))
+            r = self.test_chain(c, data)
+            print("Tested chain {} with results {}.".format(c, r))
+            results.append((c, r))
+        return sorted(results, key=lambda r: r[1][0])

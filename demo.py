@@ -49,6 +49,9 @@ def handler(data):
 # Instantiate the chain
 c = sm.Chain()
 c.set_column_format(["username", "text", "classification"])
+# c1 is instantiated to test two chains against each other
+c1 = sm.Chain()
+c1.set_column_format(["username", "text", "classification"])
 
 # Load JSON configuration add use it to configure the TSModule
 filename = "config.json"
@@ -65,6 +68,7 @@ adjc_fe.set_discrete_format(discrete_format, discrete_values)
 adjc = sm.FeatureExtractorModule(adjc_fe)
 adjc.key = "adjective-count"
 c.add_mod(adjc)
+c1.add_mod(adjc)
 
 adjr_fe = pc.AdjectiveRatioFE()
 discrete_format1 = ["0.0_0.5", "0.5<"]
@@ -72,6 +76,7 @@ adjr_fe.set_discrete_format(discrete_format1, [0, 1])
 adjr = sm.FeatureExtractorModule(adjr_fe)
 adjr.key = "adjective-ratio"
 c.add_mod(adjr)
+c1.add_mod(adjr)
 
 negi_fe = pc.NegativeInfluenceFE()
 negi = sm.FeatureExtractorModule(negi_fe)
@@ -91,6 +96,7 @@ c.add_mod(expunc)
 # Load the classification module with data
 nbc = cl.NBClassifierModule()
 c.add_mod(nbc)
+c1.add_mod(nbc)
 
 # We branch at this point to either demo fetching tweets
 # or show the test suite
@@ -113,7 +119,9 @@ elif opt == "test":
     k_n = input("How many k-folds would you like to perform?\n")
     t = sm.KFoldValidationTest()
     t.set_n_folds(int(k_n))
-    (mean, m_e) = t.test_chain(c, training_datas)
-    print("{}% accuracy, +/- {}%".format(mean, m_e))
+    print("Now testing chain {} and chain {} against each other.".format(
+        c, c1))
+    r = t.test_chains([c, c1], training_datas)
+    print(r)
 else:
     print("Unrecognized input \"{}\"".format(opt))
