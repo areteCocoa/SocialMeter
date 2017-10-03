@@ -83,6 +83,11 @@ excaps = sm.FeatureExtractorModule(excaps_fe)
 excaps.key = "excessive-caps"
 c.add_mod(excaps)
 
+expunc_fe = pc.ExcessivePunctuationFE()
+expunc = sm.FeatureExtractorModule(expunc_fe)
+expunc.key = "excessive-punctuation"
+c.add_mod(expunc)
+
 # Load the classification module with data
 nbc = cl.NBClassifierModule()
 c.add_mod(nbc)
