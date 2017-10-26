@@ -5,6 +5,10 @@ from ..chain_links import FeatureExtractor
 
 
 class AdjectiveCounterFE(FeatureExtractor):
+    """
+    The AdjectiveCounterFE class counts the number of adjectives
+    using the nltk pos_tag function and returns the discrete result.
+    """
     def extract(self, text):
         tokens = nltk.word_tokenize(text)
         pos_tags = nltk.pos_tag(tokens)

@@ -4,6 +4,12 @@ from ..chain_links import Module, OUTPUT_MOD
 
 
 class OutputModule(Module):
+    """
+    OutputModule takes the pandas DataFrame and converts it
+    to a dict.
+
+    It ensures that there is a text field in the dictionary.
+    """
     def __init__(self):
         self.set_mod_type(OUTPUT_MOD)
 

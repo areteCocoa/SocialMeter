@@ -6,6 +6,10 @@ from sklearn.naive_bayes import GaussianNB
 
 
 class NBClassifierModule(Module):
+    """
+    NBClassifierModule uses the GaussianNB classifier
+    from sklearn. It is a module wrapper.
+    """
     def __init__(self):
         self.set_mod_type(CLASS_MOD)
         self.classifier = GaussianNB()

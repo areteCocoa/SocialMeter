@@ -12,20 +12,26 @@ import json
 
 
 class TwitterStreamModule(Module, StreamListener):
-    # Object
+    """
+    The TwitterStreamModule uses the TwitterStream API to fetch
+    data. It must be configured with the API data using a json config
+    file.
+    """
     def __init__(self):
         self.set_mod_type(INPUT_MOD)
         self.allow_empty = False
 
-    # Load the config file and set the access and consumer keys
     def load_config(self, filename):
+        """
+        Loads the json config file with name `filename` and parses it
+        to the required fields.
+        """
         config = json.load(open(filename, 'r'))["twitter"]
         self.set_access_token(config["access_token"])
         self.set_access_token_secret(config["access_token_secret"])
         self.set_consumer_key(config["consumer_key"])
         self.set_consumer_secret(config["consumer_secret"])
 
-    # Module
     def process(self, data):
         super().process(data)
 

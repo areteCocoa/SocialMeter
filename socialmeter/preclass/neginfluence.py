@@ -5,6 +5,10 @@ from ..chain_links import FeatureExtractor
 
 
 class NegativeInfluenceFE(FeatureExtractor):
+    """
+    NegativeInfluenceFE extracts the number of 'not' tokens in the
+    sentence and discretizes the result to odd or even number.
+    """
     def extract(self, text):
         tokens = nltk.word_tokenize(text)
         has_not = False

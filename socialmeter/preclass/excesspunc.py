@@ -5,6 +5,13 @@ import nltk
 
 
 class ExcessivePunctuationFE(FeatureExtractor):
+    """
+    The ExcessivePunctuationFE class counts the number of
+    punctuations greater than 1 using the nltk pos_tag function.
+
+    The pos_tag function ensures that '...' and '..' are tagged
+    as 1 and 2 characters respectively.
+    """
     def extract(self, text):
         pos_tokens = nltk.pos_tag(nltk.word_tokenize(text))
         ex_punc_word = 0

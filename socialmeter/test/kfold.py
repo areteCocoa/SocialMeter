@@ -7,27 +7,33 @@ class ValidationTest():
     def __init__(self):
         pass
 
-    # Tests the chain for accuracy and returns the percentage.
-    # Subclasses should not call this method, it is only here
-    # to serve as documentation for how a subclass should be
-    # implemented.
-    #
-    # The chain should contain an untrained classifier, and data
-    # should be the data that you would use to train it.
-    #
-    # data should be a list of tuples of (text, sentiment)
     def test_chain(self, chain, data):
-        return 0
+        """
+        Tests the chain for accuracy and returns the percentage.
+        Subclasses should not call this method, it is only here
+        to serve as documentation for how a subclass should be
+        implemented.
+
+        The chain should contain an untrained classifier, and data
+        should be the data that you would use to train it.
+
+        data should be a list of tuples of (text, sentiment)
+        """
+        return None
 
     def test_chains(self, chains, data):
-        return 0
+        return None
 
 
-# KFoldValidationTest is a test that uses K-fold to test
-# a chain.
-#
-# The number of folds can be set using .set_n_folds(n).
 class KFoldValidationTest(ValidationTest):
+    """
+    KFoldValidationTest is a test that uses K-fold to test
+    a chain.
+
+    Uses sklearn's cross_val_score function to get the score.
+
+    The number of folds can be set using .set_n_folds(n).
+    """
     def __init__(self):
         super().__init__()
         self.n_folds = 5
@@ -38,8 +44,6 @@ class KFoldValidationTest(ValidationTest):
     def prep_chain():
         pass
 
-    # K-Fold validation uses sklearn's cross_val_score
-    # function to score it.
     def test_chain(self, chain, data):
         # Get the mods
         class_mod = chain.class_link.mods[0]
