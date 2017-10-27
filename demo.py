@@ -13,27 +13,35 @@ import socialmeter.output as out
 # Loads sentiment-analysis-dataset.csv and returns it in
 # list format. Loads n records.
 def load_sentiment_dataset(n, preclass_link):
+    (texts, classifications) = load_dataset(n)
+    
+    features = list()
+    for i in range(1, n+1):
+        # Run the text through the preclass chain to get
+        # the features
+        feature = list()
+        text = texts[i]
+        for mod in preclass_link.mods:
+            fe = mod.feature_extractor
+            feature.append(fe.extract(text))
+        features.append(feature)
+
+    return (features, classifications)
+
+
+def load_dataset(n):
     training_filename = "sentiment-analysis-dataset.csv"
     f = open(training_filename, 'r')
     f.readline()  # Throwaway the column header
-    features = list()
+    texts = list()
     classifications = list()
 
     for i in range(1, n+1):
         s = f.readline().split(',')
-        sentiment = s[1]
-        text = s[3].strip()
+        classifications.append(s[1])
+        texts.append(s[3].strip())
 
-        # Run the text through the preclass chain to get
-        # the features
-        classif = list()
-        for mod in preclass_link.mods:
-            fe = mod.feature_extractor
-            classif.append(fe.extract(text))
-        features.append(classif)
-        classifications.append(sentiment)
-
-    return (features, classifications)
+    return (texts, classifications)
 
 
 # Create a dummy handler
@@ -68,7 +76,7 @@ adjc_fe.set_discrete_format(discrete_format, discrete_values)
 adjc = sm.FeatureExtractorModule(adjc_fe)
 adjc.key = "adjective-count"
 c.add_mod(adjc)
-c1.add_mod(adjc)
+c1.add_mod(adjc.deep_copy())
 
 adjr_fe = pc.AdjectiveRatioFE()
 discrete_format1 = ["0.0_0.5", "0.5<"]
@@ -102,21 +110,21 @@ c1.add_mod(wc)
 # Load the classification module with data
 nbc = cl.NBClassifierModule()
 c.add_mod(nbc)
-c1.add_mod(nbc)
+c1.add_mod(nbc.deep_copy())
 
 # We branch at this point to either demo fetching tweets
 # or show the test suite
 n_e = int(input("How many entries should be loaded from the\
  test dataset?\n"))
-training_datas = load_sentiment_dataset(n_e, c.preclass_link)
+
 
 opt = input("Enter \"tweets\" to get tweets, and \"test\" to test \
 the chain.\n")
 
 if opt == "tweets":
+    training_datas = load_sentiment_dataset(n_e, c.preclass_link)
     nbc.train(c.preclass_link, training_datas)
 
-    c.add_mod(nbc)
     # Load the output module
     c.add_mod(out.OutputModule())
     c.set_handler(handler)
@@ -125,9 +133,10 @@ elif opt == "test":
     k_n = input("How many k-folds would you like to perform?\n")
     t = sm.KFoldValidationTest()
     t.set_n_folds(int(k_n))
-    print("Now testing chain {} and chain {} against each other.".format(
-        c, c1))
-    r = t.test_chains([c, c1], training_datas)
+
+    dataset = load_dataset(n_e)
+
+    r = t.test_chains([c, c1], dataset)
     print(r)
 else:
     print("Unrecognized input \"{}\"".format(opt))

@@ -47,14 +47,27 @@ class KFoldValidationTest(ValidationTest):
     def test_chain(self, chain, data):
         # Get the mods
         class_mod = chain.class_link.mods[0]
+        
+        texts = data[0]
+        sentiments = data[1]
 
-        features = data[0]
-        classifs = data[1]
+        # Extract the features using the chain's preclass
+        # link's mod's feature extractors (there has to be
+        # an easier way to do this...
+        features = list()
+        for t in texts:
+            t_feature = list()
+            for mod in chain.preclass_link.mods:
+                fe = mod.feature_extractor
+                feature = fe.extract(t)
+                t_feature.append(feature)
+            features.append(t_feature)
 
         # Run the cross validation on the chain
         classifier = class_mod.classifier
         scores = cross_val_score(classifier, features,
-                                 classifs, cv=self.n_folds)
+                                 sentiments, cv=self.n_folds)
+        print("Testing {}.".format(hex(id(classifier))))
 
         mean = scores.mean()
         error_margin = scores.std() * 2
@@ -64,8 +77,6 @@ class KFoldValidationTest(ValidationTest):
     def test_chains(self, chains, data):
         results = list()
         for c in chains:
-            print("Testing chain {}.".format(c))
             r = self.test_chain(c, data)
-            print("Tested chain {} with results {}.".format(c, r))
             results.append((c, r))
         return sorted(results, key=lambda r: r[1][0])

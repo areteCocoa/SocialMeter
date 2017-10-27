@@ -62,6 +62,13 @@ class Module:
     def column_format(self):
         return self.__column_format
 
+    def deep_copy(self):
+        c = type(self)()
+        c.mod_type = self.mod_type
+        c.handler = self.handler
+        c.identifier = self.identifier
+        return c
+
 
 class FeatureExtractorModule(Module):
     """
@@ -95,6 +102,13 @@ class FeatureExtractorModule(Module):
             text = data["text"]
             data[self.key] = self.feature_extractor.extract(text)
         super().process(data)
+
+    def deep_copy(self):
+        c = type(self)(self.feature_extractor)
+        c.mod_type = self.mod_type
+        c.handler = self.handler
+        c.identifier = self.identifier
+        return c
 
 
 class FeatureExtractor():
@@ -267,6 +281,17 @@ class Link:
     def is_empty(self):
         return len(self.mods) == 0
 
+    def deep_copy(self, new_owner):
+        """
+        Returns a new copy of this link and all of the modules
+        """
+        c = Link(new_owner, self.link_type)
+        mods = list()
+        for m in self.mods:
+            mods.append(m.deep_copy())
+        c.mods = mods
+        return c
+
 
 class Chain:
     """
@@ -285,6 +310,8 @@ class Chain:
 
         self.output_link = Link(self, OUTPUT_LINK)
         self.output_link.set_handler(self.link_finished)
+
+        self.column_format = None
 
     def set_handler(self, handler):
         self.handler = handler
@@ -311,6 +338,18 @@ class Chain:
             self.class_link.add_mod(mod)
         elif mod_type == OUTPUT_MOD:
             self.output_link.add_mod(mod)
+
+    def deep_copy(self):
+        """
+        Returns a copy of the chain and every link and module.
+        """
+        c = Chain()
+        c.column_format = self.column_format
+        c.input_link = self.input_link.deep_copy(c)
+        c.preclass_link = self.preclass_link.deep_copy(c)
+        c.class_link = self.class_link.deep_copy(c)
+        c.output_link = self.output_link.deep_copy(c)
+        return c
 
     def start_if_ready(self):
         if not self.input_link.is_empty()\
