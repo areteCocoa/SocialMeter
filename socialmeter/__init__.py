@@ -6,4 +6,4 @@ from socialmeter.chain_links import FeatureExtractorModule
 from socialmeter.chain_links import PreprocessorExtractorModule
 
 # === Tests ===
-from socialmeter.test.kfold import KFoldValidationTest
+from socialmeter.testsuite.kfold import KFoldValidationTest

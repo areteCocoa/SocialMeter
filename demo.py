@@ -31,7 +31,7 @@ def load_sentiment_dataset(n, preclass_link):
 
 
 def load_dataset(n):
-    training_filename = "sentiment-analysis-dataset.csv"
+    training_filename = "datasets/sentiment-analysis-dataset.csv"
     f = open(training_filename, 'r')
     f.readline()  # Throwaway the column header
     texts = list()
@@ -63,7 +63,7 @@ c1 = sm.Chain()
 c1.set_column_format(["username", "text", "classification"])
 
 # Load JSON configuration add use it to configure the TSModule
-filename = "config.json"
+filename = "configs/config.json"
 ts = inp.twitterstream.TwitterStreamModule()
 ts.load_config(filename)
 ts.set_term("thomasjring")
