@@ -75,40 +75,29 @@ c.add_mod(ngram)
 
 # Load the preclassification modules
 adjc_fe = pc.AdjectiveCounterFE()
-discrete_format = ["0_0", "1_2", "2<"]
-discrete_values = [0, 1, 2]
-adjc_fe.set_discrete_format(discrete_format, discrete_values)
 adjc = sm.FeatureExtractorModule(adjc_fe)
-adjc.key = "adjective-count"
 c.add_mod(adjc)
 c1.add_mod(adjc.deep_copy())
 
 adjr_fe = pc.AdjectiveRatioFE()
-discrete_format1 = ["0.0_0.5", "0.5<"]
-adjr_fe.set_discrete_format(discrete_format1, [0, 1])
 adjr = sm.FeatureExtractorModule(adjr_fe)
-adjr.key = "adjective-ratio"
 c.add_mod(adjr)
 c1.add_mod(adjr)
 
 negi_fe = pc.NegativeInfluenceFE()
 negi = sm.FeatureExtractorModule(negi_fe)
-negi.key = "negative-influence"
 c.add_mod(negi)
 
 excaps_fe = pc.ExcessiveCapitalsFE()
 excaps = sm.FeatureExtractorModule(excaps_fe)
-excaps.key = "excessive-caps"
 c.add_mod(excaps)
 
 expunc_fe = pc.ExcessivePunctuationFE()
 expunc = sm.FeatureExtractorModule(expunc_fe)
-expunc.key = "excessive-punctuation"
 c.add_mod(expunc)
 
 wc_fe = pc.WordCountFE()
 wc = sm.FeatureExtractorModule(wc_fe)
-wc.key = "word-count"
 c.add_mod(wc)
 c1.add_mod(wc)
 

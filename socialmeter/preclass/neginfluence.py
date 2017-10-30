@@ -5,6 +5,10 @@ from ..chain_links import FeatureExtractor
 
 
 class NegativeInfluenceFE(FeatureExtractor):
+    def __init__(self):
+        super().__init__()
+        self.key = "negative-influence"
+    
     """
     NegativeInfluenceFE extracts the number of 'not' tokens in the
     sentence and discretizes the result to odd or even number.

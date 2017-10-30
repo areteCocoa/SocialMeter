@@ -7,6 +7,12 @@ from nltk.corpus import sentiwordnet as sw
 
 
 class AdjectiveRatioFE(FeatureExtractor):
+    def __init__(self):
+        super().__init__()
+        discrete_format = ["0.0_0.5", "0.5<"]
+        self.set_discrete_format(discrete_format, [0, 1])
+        self.key = "adjective-ratio"
+
     """
     AdjectiveRatioFE counts the number of positive and
     the number of negative words in the sentence by

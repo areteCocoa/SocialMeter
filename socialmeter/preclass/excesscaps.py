@@ -5,6 +5,10 @@ from ..chain_links import FeatureExtractor
 
 
 class ExcessiveCapitalsFE(FeatureExtractor):
+    def __init__(self):
+        super().__init__()
+        self.key = "excessive-caps"
+    
     """
     The ExcessiveCapitalsFE class counts the number of words with
     all capitals in the sentence and then returns it.

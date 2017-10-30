@@ -5,6 +5,10 @@ import nltk
 
 
 class ExcessivePunctuationFE(FeatureExtractor):
+    def __init__(self):
+        super().__init__()
+        self.key = "excessive-punctuation"
+    
     """
     The ExcessivePunctuationFE class counts the number of
     punctuations greater than 1 using the nltk pos_tag function.
