@@ -106,6 +106,9 @@ Natural Language Processing with Python - Steven Bird, Ewan Klein, Edward Loper
 http://victoria.lviv.ua/html/fl5/NaturalLanguageProcessingWithPython.pdf
 
 ## Datasets
+W3C Wiki for Sentiment Analysis Datasets
+https://www.w3.org/community/sentiment/wiki/Datasets#Emoticon_Sentiment_Lexicon
+
 Twitter Sentiment Analysis Training Corpus (Dataset)
 http://thinknook.com/twitter-sentiment-analysis-training-corpus-dataset-2012-09-22/
 
