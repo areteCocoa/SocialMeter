@@ -15,7 +15,7 @@ import socialmeter.output as out
 # list format. Loads n records.
 def load_sentiment_dataset(n, preclass_link):
     (texts, classifications) = load_dataset(n)
-    
+
     features = list()
     for i in range(1, n+1):
         # Run the text through the preclass chain to get
