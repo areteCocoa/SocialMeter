@@ -3,6 +3,7 @@
 import socialmeter as sm
 
 import socialmeter.inputs as inp
+import socialmeter.preprocess as pp
 import socialmeter.preclass as pc
 import socialmeter.classif as cl
 import socialmeter.output as out
@@ -67,6 +68,10 @@ ts = inp.twitterstream.TwitterStreamModule()
 ts.load_config(filename)
 ts.set_term("thomasjring")
 c.add_mod(ts)
+
+# Load the preprocess modules
+ngram = sm.PreprocessorExtractorModule(pp.NGramPreprocessor())
+c.add_mod(ngram)
 
 # Load the preclassification modules
 adjc_fe = pc.AdjectiveCounterFE()

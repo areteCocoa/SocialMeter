@@ -5,12 +5,14 @@
 # The chain class uses these to place modules in the correct
 # link, and changes how they're utilized.
 INPUT_MOD = "input-module"
+PREPROCESS_MOD = "preprocess-module"
 PRECLASS_MOD = "preclass-module"
 CLASS_MOD = "class-module"
 OUTPUT_MOD = "output-module"
 
 # This group of variables are used to define the type of link.
 INPUT_LINK = "input-link"
+PREPROCESS_LINK = "preprocess-link"
 PRECLASS_LINK = "pre-classification-link"
 CLASS_LINK = "classification-link"
 OUTPUT_LINK = "output-link"
@@ -68,6 +70,38 @@ class Module:
         c.handler = self.handler
         c.identifier = self.identifier
         return c
+
+
+class PreprocessorExtractorModule(Module):
+    """PreprocessorExtractorModule is a wrapper class that performs
+    general preprocessing operations using the PreprocessorExtractor
+    class and it's subclasses.
+    """
+    def __init__(self, preprocessor):
+        self.set_mod_type(PREPROCESS_MOD)
+        self.preprocess_extractor = preprocessor
+        self.key = "{}".format(preprocessor)
+
+    def set_key(self, key):
+        self.key = key
+
+    def process(self, data):
+        if "text" in data.keys():
+            text = data["text"]
+            data[self.key] = self.preprocess_extractor.extract(text)
+        super().process(data)
+
+    def deep_copy(self):
+        c = type(self)(self.feature_extractor)
+        c.mod_type = self.mod_type
+        c.handler = self.handler
+        c.identifier = self.identifier
+        return c
+
+
+class PreprocessorExtractor():
+    def extract(self, text):
+        return None
 
 
 class FeatureExtractorModule(Module):
@@ -302,6 +336,9 @@ class Chain:
         self.input_link = Link(self, INPUT_LINK)
         self.input_link.set_handler(self.link_finished)
 
+        self.preprocess_link = Link(self, PREPROCESS_LINK)
+        self.preprocess_link.set_handler(self.link_finished)
+        
         self.preclass_link = Link(self, PRECLASS_LINK)
         self.preclass_link.set_handler(self.link_finished)
 
@@ -369,7 +406,8 @@ class Chain:
 
     def link_finished(self, sender, data):
         if sender.link_type == INPUT_LINK:
-            data["features"] = dict()
+            self.preprocess_link.process(data)
+        elif sender.link_type == PREPROCESS_LINK:
             self.preclass_link.process(data)
         elif sender.link_type == PRECLASS_LINK:
             self.class_link.process(data)
