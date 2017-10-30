@@ -15,7 +15,7 @@ class ExcessiveCapitalsFE(FeatureExtractor):
     """
     def extract(self, text):
         all_caps = 0
-        tokens = nltk.word_tokenize(text)
+        tokens = text.split(' ')
         for t in tokens:
             if t.upper() == t:
                 all_caps += 1

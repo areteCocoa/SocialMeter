@@ -16,11 +16,12 @@ class EmoticonSentimentFE(FeatureExtractor):
         """
         self.sentiments = dict()
         l = f.readline()
-        while l is not None:
-            s = l.split('\t')
+        while l is not '':
+            s = l.strip().split('\t')
             emo = s[0]
-            sent = s[1].strip()
+            sent = int(s[1].strip())
             self.sentiments[emo] = sent
+            l = f.readline()
 
     def extract(self, text):
         if text in self.sentiments.keys():
