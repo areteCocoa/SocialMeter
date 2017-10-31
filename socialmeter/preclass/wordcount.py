@@ -15,4 +15,5 @@ class WordCountFE(FeatureExtractor):
     """
     def extract(self, text):
         tokens = nltk.word_tokenize(text)
-        return self.discretize_result(len(tokens))
+        words = [(t, pos) for (t, pos) in nltk.pos_tag(tokens) if pos != "."]
+        return self.discretize_result(len(words))

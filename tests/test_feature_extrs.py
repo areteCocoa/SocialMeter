@@ -115,3 +115,85 @@ returned {}.".format(t2r))
 returned {}.".format(t3r))
 
     assert not errors, "Errors occured:\n{}".format("\n".join(errors))
+
+
+def test_hashtag_count():
+    hc = pc.HashtagCountFE()
+    errors = list()
+
+    t1 = "This is a #single hashtag check"  # 1
+    t2 = "This #is #a #lot #of #hashtags" # 5
+    t3 = "This checks whether # 10 counts (it shouldn't)" # 0
+    t4 = "This checks if an unterminated pound sign works #" # 0
+
+    t1r = hc.extract(t1)  # 1
+    t2r = hc.extract(t2)  # 5
+    t3r = hc.extract(t3)  # 0
+    t4r = hc.extract(t4)  # 0
+
+    if t1r != 1:
+        errors.append("Error detecting 1 hashtag. Instead \
+returned {}.".format(t1r))
+    if t2r != 5:
+        errors.append("Error detecting 5 hashtags. Instead \
+returned {}.".format(t2r))
+    if t3r != 0:
+        errors.append("Error detecting 0 hashtags. Instead \
+returned {}.".format(t3r))
+    if t4r != 0:
+        errors.append("Error detecting 0 hashtags. Instead \
+returned {}.".format(t3r))
+
+    assert not errors, "Errors occured:\n{}".format("\n".join(errors))
+
+
+def test_neg_inf():
+    ni = pc.NegativeInfluenceFE()
+    errors = list()
+
+    t1 = "This is not a good sentence."
+    t2 = "This a good sentence."
+    t3 = "This is not a not good sentence."
+    t4 = "This is not not not a great sentence."
+
+    t1r = ni.extract(t1)  # 1
+    t2r = ni.extract(t2)  # 0
+    t3r = ni.extract(t3)  # 0
+    t4r = ni.extract(t4)  # 1
+
+    if t1r != 1:
+        errors.append("Error detecting odd negatives. Instead \
+returned {}.".format(t1r))
+    if t2r != 0:
+        errors.append("Error detecting even negatives. Instead \
+returned {}.".format(t2r))
+    if t3r != 0:
+        errors.append("Error detecting even. Instead \
+returned {}.".format(t3r))
+    if t4r != 1:
+        errors.append("Error detecting even. Instead \
+returned {}.".format(t4r))
+
+    assert not errors, "Errors occured:\n{}".format("\n".join(errors))
+
+
+def test_word_count():
+    wc = pc.WordCountFE()
+    errors = list()
+
+    t1 = "This has 5 words here."  # 5
+    t2 = "This has 4 words."  # 4
+    t3 = "This doesn't have 5 words."  # 6
+
+    t1r = wc.extract(t1)
+    t2r = wc.extract(t2)
+    t3r = wc.extract(t3)
+
+    if t1r != 5:
+        errors.append("Error counting 5 words. Returned {}.".format(t1r))
+    if t2r != 4:
+        errors.append("Error counting 4 words. Returned {}.".format(t2r))
+    if t3r != 6:
+        errors.append("Error counting 6 words. Returned {}.".format(t3r))
+
+    assert not errors, "Errors occured:\n{}".format("\n".join(errors))
