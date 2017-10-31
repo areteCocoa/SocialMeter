@@ -128,6 +128,11 @@ class FeatureExtractorModule(Module):
         self.feature_extractor = extractor_class
         self.key = "{}".format(extractor_class)
 
+    def __str__(self):
+        s = "FeatureExtractorModule<{}> {}\n"\
+            .format(self.feature_extractor, hex(id(self)))
+        return s
+
     def set_key(self, key):
         self.key = key
 
@@ -286,6 +291,12 @@ class Link:
         self.mods = list()
         self.column_format = None
 
+    def __str__(self):
+        s = "{} {}\n".format(self.link_type, hex(id(self)))
+        for m in self.mods:
+            s = "{}\t{}".format(s, m)
+        return s
+        
     def add_mod(self, mod):
         self.mods.append(mod)
         mod.set_handler(self.handle_mod_data)
@@ -349,6 +360,15 @@ class Chain:
         self.output_link.set_handler(self.link_finished)
 
         self.column_format = None
+
+    def __str__(self):
+        s = "Chain {}:\n".format(hex(id(self)))
+        s = "{}\tcolumn_format: {}\n".format(s, self.column_format)
+        for l in [self.input_link, self.preprocess_link,
+                  self.preclass_link, self.class_link,
+                  self.output_link]:
+            s = "{}\t{}".format(s, l)
+        return s
 
     def set_handler(self, handler):
         self.handler = handler

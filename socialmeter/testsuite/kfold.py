@@ -67,7 +67,6 @@ class KFoldValidationTest(ValidationTest):
         classifier = class_mod.classifier
         scores = cross_val_score(classifier, features,
                                  sentiments, cv=self.n_folds)
-        print("Testing {}.".format(hex(id(classifier))))
 
         mean = scores.mean()
         error_margin = scores.std() * 2

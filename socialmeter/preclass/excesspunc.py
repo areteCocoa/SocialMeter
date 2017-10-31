@@ -26,7 +26,6 @@ class ExcessivePunctuationFE(FeatureExtractor):
             elif pos == ":" and token == "...":
                 conseq_count += 3
             else:
-                print("{} not punctuation!".format(token))
                 if conseq_count > 1:
                     total_count += 1
                 conseq_count = 0
