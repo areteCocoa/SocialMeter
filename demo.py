@@ -20,7 +20,7 @@ def load_sentiment_dataset(n, preclass_link):
     (texts, classifications) = load_dataset(n)
 
     features = list()
-    for i in range(1, n+1):
+    for i in range(0, n):
         # Run the text through the preclass chain to get
         # the features
         feature = list()
@@ -51,10 +51,9 @@ def load_dataset(n):
 # Create a dummy handler
 def handler(data):
     text = data["text"]
-    features = data["features"]
     classif = data["classification"]  # 1 = positive, 0 = negative
-    print("Text: \"{}\"\n\tFeatures: \"{}\"\n\tClassification: \"{}\""
-          .format(text, features, classif))
+    print("Text: \"{}\"\n\tClassification: \"{}\""
+          .format(text, classif))
 
 
 def powerset(iterable):
@@ -67,9 +66,6 @@ def powerset(iterable):
 # Instantiate the chain
 c = sm.Chain()
 c.set_column_format(["username", "text", "classification"])
-# c1 is instantiated to test two chains against each other
-c1 = sm.Chain()
-c1.set_column_format(["username", "text", "classification"])
 
 # Load JSON configuration add use it to configure the TSModule
 filename = "configs/config.json"
@@ -79,41 +75,30 @@ ts.set_term("thomasjring")
 c.add_mod(ts)
 
 # Load the preprocess modules
-ngram = sm.PreprocessorExtractorModule(pp.NGramPreprocessor())
-c.add_mod(ngram)
+sw = pp.StopWordsPreprocessor()
+sw.key = "stop-words"
+from nltk.corpus import stopwords
+stop = list(stopwords.words('english'))
+sw.add_stop_words(stop)
+c.add_mod(sm.PreprocessorExtractorModule(sw))
 
 # Load the preclassification modules
 adjc_fe = pc.AdjectiveCounterFE()
 adjc = sm.FeatureExtractorModule(adjc_fe)
 c.add_mod(adjc)
-c1.add_mod(adjc.deep_copy())
 
 adjr_fe = pc.AdjectiveRatioFE()
 adjr = sm.FeatureExtractorModule(adjr_fe)
 c.add_mod(adjr)
-c1.add_mod(adjr)
 
-negi_fe = pc.NegativeInfluenceFE()
-negi = sm.FeatureExtractorModule(negi_fe)
-c.add_mod(negi)
-
-excaps_fe = pc.ExcessiveCapitalsFE()
-excaps = sm.FeatureExtractorModule(excaps_fe)
-c.add_mod(excaps)
-
-expunc_fe = pc.ExcessivePunctuationFE()
-expunc = sm.FeatureExtractorModule(expunc_fe)
-c.add_mod(expunc)
-
-wc_fe = pc.WordCountFE()
-wc = sm.FeatureExtractorModule(wc_fe)
-c.add_mod(wc)
-c1.add_mod(wc)
+exc_caps = pc.ExcessiveCapitalsFE()
+exc = sm.FeatureExtractorModule(exc_caps)
+c.add_mod(exc)
 
 # Load the classification module with data
 nbc = cl.NBClassifierModule()
 c.add_mod(nbc)
-c1.add_mod(nbc.deep_copy())
+
 
 # We branch at this point to either demo fetching tweets
 # or show the test suite
@@ -132,15 +117,6 @@ if opt == "tweets":
     c.add_mod(out.OutputModule())
     c.set_handler(handler)
     c.start_if_ready()
-elif opt == "test":
-    k_n = input("How many k-folds would you like to perform?\n")
-    t = sm.KFoldValidationTest()
-    t.set_n_folds(int(k_n))
-
-    dataset = load_dataset(n_e)
-
-    r = t.test_chains([c, c1], dataset)
-    print(r)
 elif opt == "cmp":
     preproc  = {pp.HashtagPreprocessor, pp.MentionPreprocessor,
                 pp.NGramPreprocessor, pp.POSTagPreprocessor,

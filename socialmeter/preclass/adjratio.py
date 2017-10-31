@@ -10,7 +10,8 @@ class AdjectiveRatioFE(FeatureExtractor):
     def __init__(self):
         super().__init__()
         discrete_format = ["0.0_0.5", "0.5<"]
-        self.set_discrete_format(discrete_format, [0, 1])
+        d_values = [0, 1]
+        self.set_discrete_format(discrete_format, d_values)
         self.key = "adjective-ratio"
 
     """

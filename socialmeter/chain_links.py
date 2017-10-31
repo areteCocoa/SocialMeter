@@ -126,12 +126,18 @@ class FeatureExtractorModule(Module):
     def __init__(self, extractor_class):
         self.set_mod_type(PRECLASS_MOD)
         self.feature_extractor = extractor_class
-        self.key = "{}".format(extractor_class)
+        try:
+            self.key = self.feature_extractor.key
+        except:
+            self.key = "{}".format(extractor_class)
 
     def __str__(self):
         s = "FeatureExtractorModule<{}> {}\n"\
             .format(self.feature_extractor, hex(id(self)))
         return s
+
+    def with_fe_class(fe_class):
+        return FeatureExtractorModule(fe_class())
 
     def set_key(self, key):
         self.key = key
@@ -296,7 +302,7 @@ class Link:
         for m in self.mods:
             s = "{}\t{}".format(s, m)
         return s
-        
+
     def add_mod(self, mod):
         self.mods.append(mod)
         mod.set_handler(self.handle_mod_data)
@@ -309,6 +315,11 @@ class Link:
 
     def handle_mod_data(self, sender, data):
         if sender.identifier == len(self.mods):
+            if self.link_type == PRECLASS_LINK:
+                for mod in self.mods:
+                    k = mod.key
+                    if k not in data.keys():
+                        print("PROBLEM: {}.".format(k))
             # Finished all the modules in the link, time to pass up to
             # the chain
             self.handler(self, data)
@@ -338,6 +349,21 @@ class Link:
         return c
 
 
+class PreprocessorLink(Link):
+    def __init__(self, owner):
+        super().__init__(owner, PREPROCESS_LINK)
+
+    def handle_mod_data(self, sender, data):
+        # The preprocessor modules will set their k/v in the
+        # Series to the result of their operation, so we just
+        # need to change the 'text' key's value to the new value
+        # (sender.key) and then send it to the super method
+        new_text = data[sender.key]
+        data['text'] = new_text
+        
+        super().handle_mod_data(sender, data)
+
+    
 class Chain:
     """
     The Chain class is responsible for managing all links and modules.
@@ -347,7 +373,7 @@ class Chain:
         self.input_link = Link(self, INPUT_LINK)
         self.input_link.set_handler(self.link_finished)
 
-        self.preprocess_link = Link(self, PREPROCESS_LINK)
+        self.preprocess_link = PreprocessorLink(self)
         self.preprocess_link.set_handler(self.link_finished)
         
         self.preclass_link = Link(self, PRECLASS_LINK)
@@ -377,6 +403,7 @@ class Chain:
         self.column_format = c_format
 
         self.input_link.set_column_format(c_format)
+        self.preprocess_link.set_column_format(c_format)
         self.preclass_link.set_column_format(c_format)
         self.class_link.set_column_format(c_format)
         self.output_link.set_column_format(c_format)
@@ -385,9 +412,10 @@ class Chain:
         mod_type = mod.mod_type
         if mod_type == INPUT_MOD:
             self.input_link.add_mod(mod)
+        elif mod_type == PREPROCESS_MOD:
+            self.preprocess_link.add_mod(mod)
         elif mod_type == PRECLASS_MOD:
             self.preclass_link.add_mod(mod)
-
             # We have to add a column for the new feature
             new_columns = self.column_format + [mod.key]
             self.set_column_format(new_columns)
@@ -403,6 +431,7 @@ class Chain:
         c = Chain()
         c.column_format = self.column_format
         c.input_link = self.input_link.deep_copy(c)
+        c.preprocess_link = self.preprocess_link.deep_copy(c)
         c.preclass_link = self.preclass_link.deep_copy(c)
         c.class_link = self.class_link.deep_copy(c)
         c.output_link = self.output_link.deep_copy(c)
@@ -410,6 +439,7 @@ class Chain:
 
     def start_if_ready(self):
         if not self.input_link.is_empty()\
+           and not self.preprocess_link.is_empty()\
            and not self.preclass_link.is_empty()\
            and not self.class_link.is_empty()\
            and not self.output_link.is_empty():
@@ -417,6 +447,8 @@ class Chain:
         else:
             if self.input_link.is_empty():
                 print("Not ready to start, input link is empty.")
+            if self.preprocess_link.is_empty():
+                print("Not ready to start, preprocess link is empty.")
             if self.preclass_link.is_empty():
                 print("Not ready to start, preclass link is empty.")
             if self.class_link.is_empty():

@@ -35,6 +35,7 @@ class StopWordsPreprocessor(PreprocessorExtractor):
             self.stop_words.append(w)
 
     def extract(self, text):
+        print("Extracting text {}.".format(text))
         t = text.split(' ')
         l = list()
         for t in t:

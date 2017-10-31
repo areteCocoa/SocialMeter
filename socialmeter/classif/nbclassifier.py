@@ -20,18 +20,19 @@ class NBClassifierModule(Module):
         classifications = training_data[1]
         for mod in preclass_link.mods:
             self.keys.append(mod.key)
-        self.classifer = self.classifier.fit(features, classifications)
+        self.classifier.fit(features, classifications)
 
     def process(self, data):
         # Format the features so we can classify them
         features_dict = dict()
+        print(data.keys())
         for key in self.keys:
             features_dict[key] = data[key]
 
         features = list()
         for v in features_dict.values():
-            features.append([v])
-        p = self.classifier.predict(features)
+            features.append(v)
+        p = self.classifier.predict([features])
         print("Predict: {}".format(p))
         if p == '0':
             data["classification"] = "negative"
