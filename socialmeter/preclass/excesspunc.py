@@ -18,15 +18,21 @@ class ExcessivePunctuationFE(FeatureExtractor):
     """
     def extract(self, text):
         pos_tokens = nltk.pos_tag(nltk.word_tokenize(text))
-        ex_punc_word = 0
-        ex_punc_sent = 0
+        conseq_count = 0
+        total_count = 0
         for (token, pos) in pos_tokens:
             if pos == ".":
-                ex_punc_word += 1
+                conseq_count += 1
+            elif pos == ":" and token == "...":
+                conseq_count += 3
             else:
-                if ex_punc_word > 1:
-                    ex_punc_sent += 1
-                ex_punc_word = 0
+                print("{} not punctuation!".format(token))
+                if conseq_count > 1:
+                    total_count += 1
+                conseq_count = 0
 
-        d_punc_c = self.discretize_result(ex_punc_sent)
+        if conseq_count > 1:
+            total_count += 1
+                
+        d_punc_c = self.discretize_result(total_count)
         return d_punc_c

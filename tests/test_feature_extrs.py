@@ -90,3 +90,28 @@ def test_excess_caps():
 {}.".format(t3r))
 
     assert not errors, "Errors occured:\n{}".format("\n".join(errors))
+
+
+def test_excess_punc():
+    ep = pc.ExcessivePunctuationFE()
+    errors = list()
+
+    t1 = "This is a normal sentence."
+    t2 = "This is a loud sentence!!! Oh my god?!?!"
+    t3 = "This!!! Has.... So many!!! Oh my god!!!"
+
+    t1r = ep.extract(t1) # 0
+    t2r = ep.extract(t2) # 2
+    t3r = ep.extract(t3) # 4
+
+    if t1r != 0:
+        errors.append("Error detecting 0 excess capitals. Instead \
+returned {}.".format(t1r))
+    if t2r != 2:
+        errors.append("Error detecting 2 excess capitals. Instead \
+returned {}.".format(t2r))
+    if t3r != 4:
+        errors.append("Error detecting 4 excess capitals. Instead \
+returned {}.".format(t3r))
+
+    assert not errors, "Errors occured:\n{}".format("\n".join(errors))
