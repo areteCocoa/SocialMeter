@@ -1,19 +1,19 @@
-# classif.nbclassifier.py
+# multinomial_nb.py
 
-from ..chain_links import Module, CLASS_MOD
+from ..chain_links import Module
 
-from sklearn.naive_bayes import GaussianNB
+from sklearn.naive_bayes import MultinomialNB
 
 
-class NBClassifierModule(Module):
+class MultinomialNBModule(Module):
     """
-    NBClassifierModule uses the GaussianNB classifier
-    from sklearn. It is a module wrapper.
+    A module wrapper around the sklearn Multinomial Naive
+    Bayes classifier. More information about it can be found here:
+    http://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.MultinomialNB.html#sklearn.naive_bayes.MultinomialNB
     """
     def __init__(self):
-        self.set_mod_type(CLASS_MOD)
-        self.classifier = GaussianNB()
-        self.keys = []
+        self.classifier = MultinomialNB()
+        self.keys = list()
 
     def train(self, preclass_link, training_data):
         features = training_data[0]
@@ -23,7 +23,6 @@ class NBClassifierModule(Module):
         self.classifier.fit(features, classifications)
 
     def process(self, data):
-        # Format the features so we can classify them
         features_dict = dict()
         for key in self.keys:
             features_dict[key] = data[key]
