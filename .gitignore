@@ -12,3 +12,5 @@ wheelhouse/
 
 configs/*
 datasets/*
+
+.emacs.desktop
