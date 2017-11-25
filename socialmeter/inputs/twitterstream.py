@@ -1,6 +1,6 @@
 # twitterstream.py
 
-from ..chain_links import Module, INPUT_MOD
+from ..chain_links import InputModule, INPUT_MOD
 
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
@@ -11,7 +11,7 @@ import pandas as pd
 import json
 
 
-class TwitterStreamModule(Module, StreamListener):
+class TwitterStreamModule(InputModule, StreamListener):
     """
     The TwitterStreamModule uses the TwitterStream API to fetch
     data. It must be configured with the API data using a json config
@@ -70,7 +70,7 @@ class TwitterStreamModule(Module, StreamListener):
                 return
         df = pd.Series(series_data)
 
-        self.handler(self, df)
+        self.handler(df)
 
     # StreamListener
     def on_data(self, data):

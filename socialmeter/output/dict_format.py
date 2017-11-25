@@ -21,4 +21,4 @@ class OutputModule(Module):
         if "text" not in d.keys():
             d["text"] = "(text not found)"
 
-        super().process(d)
+        return super().process(d)

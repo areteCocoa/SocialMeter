@@ -33,15 +33,6 @@ class Module:
     The type of the module. Should be a value from one of the constants
     above.
 
-    handler : function
-    A handler function that is called when the module is finished processing
-    the data. In most cases, this will be set by the Chain and Link objects
-    themselves.
-
-    identifier : int
-    An identifier number that is set by the owning Link object and used
-    to identify modules in the Link.
-
     column_format : List(String)
     A list of strings of fields used in the DataFrame. This is also set by
     the Link object and should not be changed manually.
@@ -50,13 +41,7 @@ class Module:
         self.mod_type = mod_type
 
     def process(self, data):
-        self.handler(self, data)
-
-    def set_handler(self, handler):
-        self.handler = handler
-
-    def set_id(self, new_id):
-        self.identifier = new_id
+        return data
 
     def set_column_format(self, c_format):
         self.__column_format = c_format[:]
@@ -64,12 +49,35 @@ class Module:
     def column_format(self):
         return self.__column_format
 
-    def deep_copy(self):
-        c = type(self)()
-        c.mod_type = self.mod_type
-        c.handler = self.handler
-        c.identifier = self.identifier
-        return c
+
+class InputModule(Module):
+    """
+    The InputModule is any module that feeds new data that is not classified
+    into the system. It is unique from a Module because it has possible
+    additional threading possibilities.
+
+    For example:
+    Scenario 1 - Text file
+    Classifying text from a file is straightforward, and data is passed
+    in after being read to the SMeter object.
+
+    Scenario 2 - API Calls
+    Listening on a port to the TwitterStreamAPI requires that all handling
+    be done on a different thread. Therefore, all text handling needs to
+    be called through a handler
+
+    Scenario 3 - API Calls on a new thread
+    If the TwitterStreamAPI is using a significant amount of power and
+    needs to use all of that power on the thread handling and preparing
+    the data, it may be adventageous to spawn a new thread (possibly
+    from a pool of threads) for the data to be processed on so the API
+    thread can continue without being blocked.
+    """
+    def process(self, data):
+        return data
+
+    def set_handler(self, handler):
+        self.handler = handler
 
 
 class PreprocessorExtractorModule(Module):
@@ -89,14 +97,7 @@ class PreprocessorExtractorModule(Module):
         if "text" in data.keys():
             text = data["text"]
             data[self.key] = self.preprocess_extractor.extract(text)
-        super().process(data)
-
-    def deep_copy(self):
-        c = type(self)(self.feature_extractor)
-        c.mod_type = self.mod_type
-        c.handler = self.handler
-        c.identifier = self.identifier
-        return c
+        return super().process(data)
 
 
 class PreprocessorExtractor():
@@ -146,14 +147,7 @@ class FeatureExtractorModule(Module):
         if "text" in data.keys():
             text = data["text"]
             data[self.key] = self.feature_extractor.extract(text)
-        super().process(data)
-
-    def deep_copy(self):
-        c = type(self)(self.feature_extractor)
-        c.mod_type = self.mod_type
-        c.handler = self.handler
-        c.identifier = self.identifier
-        return c
+        return super().process(data)
 
 
 class FeatureExtractor():
@@ -305,29 +299,14 @@ class Link:
 
     def add_mod(self, mod):
         self.mods.append(mod)
-        mod.set_handler(self.handle_mod_data)
-        mod.set_id(len(self.mods))
         if self.column_format is not None:
             mod.set_column_format(self.column_format)
 
     def process(self, data):
-        self.mods[0].process(data)
-
-    def handle_mod_data(self, sender, data):
-        if sender.identifier == len(self.mods):
-            if self.link_type == PRECLASS_LINK:
-                for mod in self.mods:
-                    k = mod.key
-                    if k not in data.keys():
-                        print("PROBLEM: {}.".format(k))
-            # Finished all the modules in the link, time to pass up to
-            # the chain
-            self.handler(self, data)
-        else:
-            self.mods[sender.identifier].process(data)
-
-    def set_handler(self, handler):
-        self.handler = handler
+        # For each module in this chain, process it
+        for m in self.mods:
+            data = m.process(data)
+        return data
 
     def set_column_format(self, c_format):
         self.column_format = c_format[:]
@@ -337,64 +316,95 @@ class Link:
     def is_empty(self):
         return len(self.mods) == 0
 
-    def deep_copy(self, new_owner):
-        """
-        Returns a new copy of this link and all of the modules
-        """
-        c = Link(new_owner, self.link_type)
-        mods = list()
-        for m in self.mods:
-            mods.append(m.deep_copy())
-        c.mods = mods
-        return c
-
 
 class PreprocessorLink(Link):
     def __init__(self, owner):
         super().__init__(owner, PREPROCESS_LINK)
 
-    def handle_mod_data(self, sender, data):
-        # The preprocessor modules will set their k/v in the
-        # Series to the result of their operation, so we just
-        # need to change the 'text' key's value to the new value
-        # (sender.key) and then send it to the super method
-        new_text = data[sender.key]
-        data['text'] = new_text
-        
-        super().handle_mod_data(sender, data)
+    def process(self, data):
+        return super().process(data)
+        # TODO: Option for preprocessors to set the text to
+        # the changed text
 
-    
-class Chain:
+
+class SMeter:
     """
-    The Chain class is responsible for managing all links and modules.
-    It is also responsible for data being handled correctly.
+    The SMeter class is responsible for managing all types of modules, as
+    well as the passing of data between them.
+
+    SMeter is the replacement class for what was previously the Chain
+    class. It is different in that it has a different structure than
+    the Chain class, specifically in how the individual modules are
+    handled vs the links of modules. This was changed because it allows
+    for more specific handling with the checking code.
     """
     def __init__(self):
-        self.input_link = Link(self, INPUT_LINK)
-        self.input_link.set_handler(self.link_finished)
-
+        self.input_mod = None
         self.preprocess_link = PreprocessorLink(self)
-        self.preprocess_link.set_handler(self.link_finished)
-        
         self.preclass_link = Link(self, PRECLASS_LINK)
-        self.preclass_link.set_handler(self.link_finished)
-
-        self.class_link = Link(self, CLASS_LINK)
-        self.class_link.set_handler(self.link_finished)
-
-        self.output_link = Link(self, OUTPUT_LINK)
-        self.output_link.set_handler(self.link_finished)
+        self.class_mod = None
+        self.output_mod = None
 
         self.column_format = None
+        self.handler = None
+
+    def start_if_ready(self):
+        # TODO: Change this into checking if they're empty one by
+        # one and printing which are not set, and then the else case
+        # is starting the input module.
+        if self.input_mod is not None\
+           and not self.preprocess_link.is_empty()\
+           and not self.preclass_link.is_empty()\
+           and self.class_mod is not None\
+           and self.output_mod is not None:
+            self.input_mod.start()
+        else:
+            print("Not ready to start.")
+
+    #  Module finished handlers
+    def new_input(self, input_data):
+        """
+        Called when there is new input from the input module.
+        """
+        data = self.preprocess_link.process(input_data)
+        self.preprocess_finished(data)
+
+    def preprocess_finished(self, data):
+        """
+        Called when the preprocessing modules have all finished.
+        """
+        data = self.preclass_link.process(data)
+        self.preclass_finished(data)
+
+    def preclass_finished(self, data):
+        """
+        Called when the preclass modules have all finished.
+        """
+        data = self.class_mod.process(data)
+        self.finished_classify(data)
+
+    def finished_classify(self, data):
+        """
+        Called when the classifier is done classifying the data.
+        """
+        data = self.output_mod.process(data)
+        self.output_finished(data)
+
+    def output_finished(self, data):
+        """
+        Called when the output module is done.
+        """
+        self.handler(data)
+
+    #  Overriding `Object` methods (excluding __init__)
 
     def __str__(self):
-        s = "Chain {}:\n".format(hex(id(self)))
-        s = "{}\tcolumn_format: {}\n".format(s, self.column_format)
-        for l in [self.input_link, self.preprocess_link,
-                  self.preclass_link, self.class_link,
-                  self.output_link]:
-            s = "{}\t{}".format(s, l)
+        s = "SMeter {}:\n".format(hex(id(self)))
+        s += "\tcolumn_format: {}\n".format(self.column_format)
+        # TODO: Print the input mod, the preprocess link, etc.
         return s
+
+    #  Getters, setters and adders
 
     def set_handler(self, handler):
         self.handler = handler
@@ -402,68 +412,38 @@ class Chain:
     def set_column_format(self, c_format):
         self.column_format = c_format
 
-        self.input_link.set_column_format(c_format)
+        if self.input_mod is not None:
+            self.input_mod.set_column_format(c_format)
         self.preprocess_link.set_column_format(c_format)
         self.preclass_link.set_column_format(c_format)
-        self.class_link.set_column_format(c_format)
-        self.output_link.set_column_format(c_format)
+        if self.class_mod is not None:
+            self.class_mod.set_column_format(c_format)
+        if self.output_mod is not None:
+            self.output_mod.set_column_format(c_format)
 
-    def add_mod(self, mod):
-        mod_type = mod.mod_type
-        if mod_type == INPUT_MOD:
-            self.input_link.add_mod(mod)
-        elif mod_type == PREPROCESS_MOD:
-            self.preprocess_link.add_mod(mod)
-        elif mod_type == PRECLASS_MOD:
-            self.preclass_link.add_mod(mod)
-            # We have to add a column for the new feature
-            new_columns = self.column_format + [mod.key]
-            self.set_column_format(new_columns)
-        elif mod_type == CLASS_MOD:
-            self.class_link.add_mod(mod)
-        elif mod_type == OUTPUT_MOD:
-            self.output_link.add_mod(mod)
+    def add_column(self, column_n):
+        new_columns = self.column_format + [column_n]
+        self.set_column_format(new_columns)
 
-    def deep_copy(self):
-        """
-        Returns a copy of the chain and every link and module.
-        """
-        c = Chain()
-        c.column_format = self.column_format
-        c.input_link = self.input_link.deep_copy(c)
-        c.preprocess_link = self.preprocess_link.deep_copy(c)
-        c.preclass_link = self.preclass_link.deep_copy(c)
-        c.class_link = self.class_link.deep_copy(c)
-        c.output_link = self.output_link.deep_copy(c)
-        return c
+    def set_input_mod(self, input_mod):
+        self.input_mod = input_mod
+        self.input_mod.set_column_format(self.column_format)
+        self.input_mod.set_handler(self.new_input)
 
-    def start_if_ready(self):
-        if not self.input_link.is_empty()\
-           and not self.preprocess_link.is_empty()\
-           and not self.preclass_link.is_empty()\
-           and not self.class_link.is_empty()\
-           and not self.output_link.is_empty():
-            self.input_link.mods[0].start()
-        else:
-            if self.input_link.is_empty():
-                print("Not ready to start, input link is empty.")
-            if self.preprocess_link.is_empty():
-                print("Not ready to start, preprocess link is empty.")
-            if self.preclass_link.is_empty():
-                print("Not ready to start, preclass link is empty.")
-            if self.class_link.is_empty():
-                print("Not ready to start, class link is empty.")
-            if self.output_link.is_empty():
-                print("Not ready to start, output link is empty.")
+    def add_preprocess_mod(self, pp_mod):
+        self.preprocess_link.add_mod(pp_mod)
+        pp_mod.set_column_format(self.column_format)
+        self.add_column(pp_mod.key)
 
-    def link_finished(self, sender, data):
-        if sender.link_type == INPUT_LINK:
-            self.preprocess_link.process(data)
-        elif sender.link_type == PREPROCESS_LINK:
-            self.preclass_link.process(data)
-        elif sender.link_type == PRECLASS_LINK:
-            self.class_link.process(data)
-        elif sender.link_type == CLASS_LINK:
-            self.output_link.process(data)
-        else:
-            self.handler(data)
+    def add_preclass_mod(self, pc_mod):
+        self.preclass_link.add_mod(pc_mod)
+        pc_mod.set_column_format(self.column_format)
+        self.add_column(pc_mod.key)
+
+    def set_class_mod(self, c_mod):
+        self.class_mod = c_mod
+        self.class_mod.set_column_format(self.column_format)
+
+    def set_output_mod(self, o_mod):
+        self.output_mod = o_mod
+        self.output_mod.set_column_format(self.column_format)

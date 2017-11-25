@@ -38,10 +38,4 @@ class NBClassifierModule(Module):
             data["classification"] = "negative"
         else:
             data["classification"] = "positive"
-        super().process(data)
-
-    def deep_copy(self):
-        c = super().deep_copy()
-        c.classifier = GaussianNB()
-        c.keys = self.keys
-        return c
+        return super().process(data)

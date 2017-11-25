@@ -59,20 +59,21 @@ def handler(data):
 def powerset(iterable):
     "powerset([1,2,3]) --> () (1,) (2,) (3,) (1,2) (1,3) (2,3) (1,2,3)"
     s = list(iterable)
-    return it.chain.from_iterable(it.combinations(s, r) for r in range(1, len(s)+1))
+    return it.chain.from_iterable(it.combinations(s, r) for r
+                                  in range(1, len(s)+1))
 
 
 # The actual demo
 # Instantiate the chain
-c = sm.Chain()
-c.set_column_format(["username", "text", "classification"])
+meter = sm.SMeter()
+meter.set_column_format(["username", "text", "classification"])
 
 # Load JSON configuration add use it to configure the TSModule
 filename = "configs/config.json"
 ts = inp.twitterstream.TwitterStreamModule()
 ts.load_config(filename)
-ts.set_term("thomasjring")
-c.add_mod(ts)
+ts.set_term("Donald Trump")
+meter.set_input_mod(ts)
 
 # Load the preprocess modules
 sw = pp.StopWordsPreprocessor()
@@ -80,24 +81,24 @@ sw.key = "stop-words"
 from nltk.corpus import stopwords
 stop = list(stopwords.words('english'))
 sw.add_stop_words(stop)
-c.add_mod(sm.PreprocessorExtractorModule(sw))
+meter.add_preprocess_mod(sm.PreprocessorExtractorModule(sw))
 
 # Load the preclassification modules
 adjc_fe = pc.AdjectiveCounterFE()
 adjc = sm.FeatureExtractorModule(adjc_fe)
-c.add_mod(adjc)
+meter.add_preclass_mod(adjc)
 
 adjr_fe = pc.AdjectiveRatioFE()
 adjr = sm.FeatureExtractorModule(adjr_fe)
-c.add_mod(adjr)
+meter.add_preclass_mod(adjr)
 
 exc_caps = pc.ExcessiveCapitalsFE()
 exc = sm.FeatureExtractorModule(exc_caps)
-c.add_mod(exc)
+meter.add_preclass_mod(exc)
 
 # Load the classification module with data
 nbc = cl.NBClassifierModule()
-c.add_mod(nbc)
+meter.set_class_mod(nbc)
 
 
 # We branch at this point to either demo fetching tweets
@@ -105,18 +106,17 @@ c.add_mod(nbc)
 n_e = int(input("How many entries should be loaded from the\
  test dataset?\n"))
 
-
 opt = input("Enter \"tweets\" to get tweets, \"test\" to test \
 the chains, \"cmp\" to compare combinations of features.\n")
 
 if opt == "tweets":
-    training_datas = load_sentiment_dataset(n_e, c.preclass_link)
-    nbc.train(c.preclass_link, training_datas)
+    training_datas = load_sentiment_dataset(n_e, meter.preclass_link)
+    nbc.train(meter.preclass_link, training_datas)
 
     # Load the output module
-    c.add_mod(out.OutputModule())
-    c.set_handler(handler)
-    c.start_if_ready()
+    meter.set_output_mod(out.OutputModule())
+    meter.set_handler(handler)
+    meter.start_if_ready()
 elif opt == "cmp":
     preproc  = {pp.HashtagPreprocessor, pp.MentionPreprocessor,
                 pp.NGramPreprocessor, pp.POSTagPreprocessor,
