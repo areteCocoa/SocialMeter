@@ -267,7 +267,7 @@ class Link:
         self.column_format = None
 
     def __str__(self):
-        s = "Link<{}>\n".format(hex(id(self)))
+        s = "<{}>\n".format(hex(id(self)))
         for m in self.mods:
             s = "{}\t{}".format(s, m)
         return s
@@ -333,11 +333,15 @@ class SMeter:
     def extract_features(self, texts):
         features = list()
         for t in texts:
-            f = list()
-            for mod in self.preclass_link.mods:
-                f.append(mod.feature_extractor.extract(t))
+            f = self.extract_single_features(self, t)
             features.append(f)
         return features
+
+    def extract_single_features(self, text):
+        f = list()
+        for mod in self.preclass_link.mods:
+            f.append(mod.feature_extractor.extract(text))
+        return f
 
     def start_if_ready(self):
         # TODO: Change this into checking if they're empty one by
@@ -353,7 +357,6 @@ class SMeter:
             for m in self.preclass_link.mods:
                 keys.append(m.key)
             self.class_mod.set_keys(keys)
-                
             self.input_mod.start()
         else:
             print("Not ready to start.")
@@ -397,7 +400,7 @@ class SMeter:
     #  Overriding `Object` methods (excluding __init__)
 
     def __str__(self):
-        s = "SMeter {}:\n".format(hex(id(self)))
+        s = "{}:\n".format(hex(id(self)))
         s += "\tcolumn_format: {}\n".format(self.column_format)
         # TODO: Print the input mod, the preprocess link, etc.
         return s

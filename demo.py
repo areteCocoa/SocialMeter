@@ -76,13 +76,8 @@ def create_smeter():
     meter.add_preclass_mod(exc)
 
     # Load the classification module with data
-    nbc = cl.RadiusNeighborsModule()
+    nbc = cl.NBClassifierModule()
     meter.set_class_mod(nbc)
-
-    # By default, load 500 data entries and train
-    n = 500
-    training_datas = load_dataset(n)
-    meter.train(training_datas)
 
     # Load the output module with data
     out_mod = out.OutputModule()
@@ -90,14 +85,12 @@ def create_smeter():
 
     return meter
 
-# if opt == "tweets":
-#     training_datas = load_sentiment_dataset(n_e, meter.preclass_link)
-#     nbc.train(meter.preclass_link, training_datas)
 
-#     # Load the output module
-#     meter.set_output_mod(out.OutputModule())
-#     meter.set_handler(handler)
-#     meter.start_if_ready()
+def training_data():
+    n = 500
+    training_datas = load_dataset(n)
+    return training_datas
+
 # elif opt == "cmp":
 #     preproc  = {pp.HashtagPreprocessor, pp.MentionPreprocessor,
 #                 pp.NGramPreprocessor, pp.POSTagPreprocessor,

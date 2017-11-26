@@ -6,6 +6,8 @@
 import argparse
 import importlib
 
+from socialmeter.testsuite import kfold
+
 parser = argparse.ArgumentParser(
     prog="SocialMeter",
     description='Tools for configuring, testing and demoing various SMeter \
@@ -46,12 +48,27 @@ else:
                  "file \"{}\". Please define the function in your file."
                  .format(filename))
 
+
+t_datas = None
+if hasattr(i, "training_data"):
+    t_datas = i.training_data()
+else:
+    parser.error("Could not find function \"training_data\" in the input " +
+                 "file \"{}\". Please define the function in your file."
+                 .format(filename))
+
 # We have the meter object, now we can see what they want to do
 # with it.
 if action == "test":
     print("Starting test with SMeter {}".format(meter))
+    kfold_test = kfold.KFoldValidationTest()
+    print("Created KFold validation test.")
+    results = kfold_test.test_meter(meter, t_datas)
+    print("SMeter has {}% accuracy with a std-dev of {}."
+          .format(results[0], results[1]))
 elif action == "demo":
     print("Starting demo with SMeter {}".format(meter))
+    meter.train(t_datas)
 
     def handler(data):
         print("({}): {}".format(data["classification"], data["text"]))

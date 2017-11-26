@@ -1,28 +1,42 @@
 # test.kfold.py
 
 from sklearn.model_selection import cross_val_score
+import numpy as np
 
 
 class ValidationTest():
     def __init__(self):
         pass
 
-    def test_chain(self, chain, data):
+    def test_meter(self, meter, data):
         """
-        Tests the chain for accuracy and returns the percentage.
-        Subclasses should not call this method, it is only here
-        to serve as documentation for how a subclass should be
+        Tests the meter for accuracy and returns the (percentage,
+        std-dev).
+
+        Subclasses should not call this methid, it is only here
+        to server as documentation for how a subclass should be
         implemented.
 
-        The chain should contain an untrained classifier, and data
-        should be the data that you would use to train it.
-
-        data should be a list of tuples of (text, sentiment)
+        The meter should contain an untrained classifier, and
+        data should be the data that you would have used to train
+        it.
         """
         return None
 
-    def test_chains(self, chains, data):
-        return None
+    def test_meters(self, meters, data):
+        """
+        Tests the list of meters for accuracy and then returns
+        them in a sorted order.
+
+        Similar to above, this is not implemented and should not
+        be called, and is only included to serve as documentation
+        for subclassing.
+        """
+        results = list()
+        for m in meters:
+            r = self.test_meter(m, data)
+            results.append((m, r))
+        return sorted(results, key=lambda r: r[1][0])
 
 
 class KFoldValidationTest(ValidationTest):
@@ -41,41 +55,30 @@ class KFoldValidationTest(ValidationTest):
     def set_n_folds(self, n):
         self.n_folds = n
 
-    def prep_chain():
-        pass
-
-    def test_chain(self, chain, data):
-        # Get the mods
-        class_mod = chain.class_link.mods[0]
-        
+    def test_meter(self, meter, data):
         texts = data[0]
         sentiments = data[1]
 
-        # Extract the features using the chain's preclass
-        # link's mod's feature extractors (there has to be
-        # an easier way to do this...
+        # Extract the features using the meter's built in function
+        # extract_features.
         features = list()
         for t in texts:
-            t_feature = list()
-            for mod in chain.preclass_link.mods:
-                fe = mod.feature_extractor
-                feature = fe.extract(t)
-                t_feature.append(feature)
-            features.append(t_feature)
+            t_features = np.asarray(meter.extract_single_features(t))
+            features.append(t_features)
+        features = np.asarray(features)
+
+        print("KFoldValidationTest finished extracting features from \
+test data.")
+
 
         # Run the cross validation on the chain
-        classifier = class_mod.classifier
+        classifier = meter.class_mod.classifier
         scores = cross_val_score(classifier, features,
                                  sentiments, cv=self.n_folds)
 
+        print("Finished cross validation.")
+
         mean = scores.mean()
-        error_margin = scores.std() * 2
+        std_dev = scores.std()
 
-        return (mean, error_margin)
-
-    def test_chains(self, chains, data):
-        results = list()
-        for c in chains:
-            r = self.test_chain(c, data)
-            results.append((c, r))
-        return sorted(results, key=lambda r: r[1][0])
+        return (mean, std_dev)
