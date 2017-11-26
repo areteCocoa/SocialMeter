@@ -20,7 +20,7 @@ class ClassifierModule(Module):
         self.classifier = None
         self.keys = list()
 
-    def train(self, preclass_link, training_data):
+    def train(self, training_data):
         """
         The train method should be used to train the
         classifier.
@@ -28,17 +28,9 @@ class ClassifierModule(Module):
         The only shared code between all classifiers is the
         convenience method of calling set_keys.
         """
-        self.set_keys(preclass_link)
+        pass
 
-    def set_keys(self, preclass_link):
-        """
-        Set keys takes the preclassifier link and retrieves
-        all the keys from it, then sets self.keys to the
-        list of keys.
-        """
-        keys = list()
-        for mod in preclass_link.mods:
-            keys.append(mod.key)
+    def set_keys(self, keys):
         self.keys = keys
 
     def features_for_data(self, data):
@@ -60,7 +52,7 @@ class SKLearnClassifierModule(ClassifierModule):
     def __init__(self):
         super().__init__()
 
-    def train(self, preclass_link, training_data):
+    def train(self, training_data):
         """
         This override of train calls .fit on the classifier. We
         make the assumption that all sklearn classifiers will
@@ -72,7 +64,7 @@ class SKLearnClassifierModule(ClassifierModule):
         imports the appropriate sklearn class and sets it in
         the __init__ method.
         """
-        super().train(preclass_link, training_data)
+        super().train(training_data)
         self.classifier.fit(training_data[0], training_data[1])
 
     def process(self, data):

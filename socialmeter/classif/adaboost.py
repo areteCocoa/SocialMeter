@@ -10,4 +10,4 @@ class AdaBoostModule(Module):
     """
     def __init__(self):
         self.classifier = None  # TODO
-        self.keys = list()
+

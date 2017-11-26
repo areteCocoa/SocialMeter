@@ -1,6 +1,6 @@
 # twitterstream.py
 
-from ..chain_links import InputModule, INPUT_MOD
+from ..chain_links import InputModule
 
 from tweepy.streaming import StreamListener
 from tweepy import OAuthHandler
@@ -18,7 +18,6 @@ class TwitterStreamModule(InputModule, StreamListener):
     file.
     """
     def __init__(self):
-        self.set_mod_type(INPUT_MOD)
         self.allow_empty = False
 
     def load_config(self, filename):

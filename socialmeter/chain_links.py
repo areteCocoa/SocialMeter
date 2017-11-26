@@ -1,22 +1,5 @@
 # chain-links.py
 
-# This group of varialbes are used to define the type of module.
-#
-# The chain class uses these to place modules in the correct
-# link, and changes how they're utilized.
-INPUT_MOD = "input-module"
-PREPROCESS_MOD = "preprocess-module"
-PRECLASS_MOD = "preclass-module"
-CLASS_MOD = "class-module"
-OUTPUT_MOD = "output-module"
-
-# This group of variables are used to define the type of link.
-INPUT_LINK = "input-link"
-PREPROCESS_LINK = "preprocess-link"
-PRECLASS_LINK = "pre-classification-link"
-CLASS_LINK = "classification-link"
-OUTPUT_LINK = "output-link"
-
 
 class Module:
     """
@@ -29,16 +12,11 @@ class Module:
 
     Members
     -------
-    mod_type : String
-    The type of the module. Should be a value from one of the constants
-    above.
 
     column_format : List(String)
     A list of strings of fields used in the DataFrame. This is also set by
     the Link object and should not be changed manually.
     """
-    def set_mod_type(self, mod_type):
-        self.mod_type = mod_type
 
     def process(self, data):
         return data
@@ -86,7 +64,6 @@ class PreprocessorExtractorModule(Module):
     class and it's subclasses.
     """
     def __init__(self, preprocessor):
-        self.set_mod_type(PREPROCESS_MOD)
         self.preprocess_extractor = preprocessor
         self.key = "{}".format(preprocessor)
 
@@ -125,7 +102,6 @@ class FeatureExtractorModule(Module):
     is used to set the correct property in the DataFrame.
     """
     def __init__(self, extractor_class):
-        self.set_mod_type(PRECLASS_MOD)
         self.feature_extractor = extractor_class
         try:
             self.key = self.feature_extractor.key
@@ -285,14 +261,13 @@ class Link:
     responsible for managing the modules and that the data is passed
     in the correct order.
     """
-    def __init__(self, owner, link_type):
+    def __init__(self, owner):
         self.owner = owner
-        self.link_type = link_type
         self.mods = list()
         self.column_format = None
 
     def __str__(self):
-        s = "{} {}\n".format(self.link_type, hex(id(self)))
+        s = "Link<{}>\n".format(hex(id(self)))
         for m in self.mods:
             s = "{}\t{}".format(s, m)
         return s
@@ -319,7 +294,7 @@ class Link:
 
 class PreprocessorLink(Link):
     def __init__(self, owner):
-        super().__init__(owner, PREPROCESS_LINK)
+        super().__init__(owner)
 
     def process(self, data):
         return super().process(data)
@@ -341,12 +316,28 @@ class SMeter:
     def __init__(self):
         self.input_mod = None
         self.preprocess_link = PreprocessorLink(self)
-        self.preclass_link = Link(self, PRECLASS_LINK)
+        self.preclass_link = Link(self)
         self.class_mod = None
         self.output_mod = None
 
         self.column_format = None
         self.handler = None
+
+    def train(self, training_data):
+        texts = training_data[0]
+        sentiments = training_data[1]
+
+        features = self.extract_features(texts)
+        self.class_mod.train((features, sentiments))
+
+    def extract_features(self, texts):
+        features = list()
+        for t in texts:
+            f = list()
+            for mod in self.preclass_link.mods:
+                f.append(mod.feature_extractor.extract(t))
+            features.append(f)
+        return features
 
     def start_if_ready(self):
         # TODO: Change this into checking if they're empty one by
@@ -357,6 +348,12 @@ class SMeter:
            and not self.preclass_link.is_empty()\
            and self.class_mod is not None\
            and self.output_mod is not None:
+            # Make sure that we've set the classifier's keys
+            keys = list()
+            for m in self.preclass_link.mods:
+                keys.append(m.key)
+            self.class_mod.set_keys(keys)
+                
             self.input_mod.start()
         else:
             print("Not ready to start.")
@@ -366,6 +363,7 @@ class SMeter:
         """
         Called when there is new input from the input module.
         """
+        print(input_data)
         data = self.preprocess_link.process(input_data)
         self.preprocess_finished(data)
 
