@@ -323,8 +323,9 @@ class SMeter:
         self.class_mod = None
         self.output_mod = None
 
-        self.column_format = None
+        self.column_format = ['classification']
         self.handler = None
+        self.name = None
 
     def train(self, training_data):
         texts = training_data[0]
@@ -404,7 +405,9 @@ class SMeter:
 
     def __str__(self):
         s = "<{}>:\n".format(hex(id(self)))
-        s += "\tcolumn_format: {},".format(self.column_format)
+        if self.name is not None:
+            s += "\tname :{},\n".format(self.name)
+        s += "\tcolumn_format: {},\n".format(self.column_format)
         s += "\tinput: {},\n".format(self.input_mod)
         s += "\tpreprocessors: {},\n".format(self.preprocess_link)
         s += "\tpreclassifiers: {},\n".format(self.preclass_link)
@@ -449,8 +452,8 @@ class SMeter:
         self.add_column(pc_mod.key)
 
     def set_class_mod(self, c_mod):
+        c_mod.set_column_format(self.column_format)
         self.class_mod = c_mod
-        self.class_mod.set_column_format(self.column_format)
 
     def set_output_mod(self, o_mod):
         self.output_mod = o_mod

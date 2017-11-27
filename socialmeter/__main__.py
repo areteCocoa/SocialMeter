@@ -40,39 +40,74 @@ except ModuleNotFoundError:
 # Successfully imported the module (the program will exit before
 # this point in the code
 
+
 # Now look for function create_smeter() and use it to get the
 # user's SMeter
-
-meter = None
-if hasattr(i, "create_smeter"):
-    meter = i.create_smeter()
-else:
-    parser.error("Could not find function \"create_smeter\" in the input " +
-                 "file \"{}\". Please define the function in your file."
-                 .format(filename))
-
-
-t_datas = None
-if hasattr(i, "training_data"):
-    t_datas = i.training_data()
-else:
-    parser.error("Could not find function \"training_data\" in the input " +
-                 "file \"{}\". Please define the function in your file."
-                 .format(filename))
-
-# We have the meter object, now we can see what they want to do
-# with it.
-if action == "test":
-    if multiple is None:
-        print("Starting test with SMeter {}".format(meter))
-        kfold_test = kfold.KFoldValidationTest()
-        print("Created KFold validation test.")
-        results = kfold_test.test_meter(meter, t_datas)
-        print("SMeter has {}% accuracy with a std-dev of {}."
-              .format(results[0], results[1]))
+def meter_from_file():
+    meter = None
+    if hasattr(i, "create_smeter"):
+        meter = i.create_smeter()
     else:
-        print("Succees!")
-elif action == "demo":
+        parser.error("Could not find function \"create_smeter\" in the input "
+                     + "file \"{}\". Please define the function in your file."
+                     .format(filename))
+    return meter
+
+
+def meters_from_file():
+    meters = None
+    if hasattr(i, "create_smeters"):
+        meters = i.create_smeters()
+    else:
+        parser.error(("Could not find function \"create_smeters\" in the input"
+                     + " file \"{}\". Please define the function in your"
+                     + " file.").format(filename))
+    return meters
+
+
+def training_data_from_file():
+    t_datas = None
+    if hasattr(i, "training_data"):
+        t_datas = i.training_data()
+    else:
+        parser.error("Could not find function \"training_data\" in the input "
+                     + "file \"{}\". Please define the function in your file."
+                     .format(filename))
+    return t_datas
+
+
+def test_single_meter():
+    meter = meter_from_file()
+    t_datas = training_data_from_file()
+    print("Starting test with SMeter {}".format(meter))
+    kfold_test = kfold.KFoldValidationTest()
+    results = kfold_test.test_meter(meter, t_datas)
+    print("SMeter has {}% accuracy with a std-dev of {}."
+          .format(results[0], results[1]))
+
+
+def test_multiple_meters():
+    meters = meters_from_file()
+    t_datas = training_data_from_file()
+    print("Starting test with {} SMeters.".format(len(meters)))
+    k = kfold.KFoldValidationTest()
+    results = k.test_meters(meters, t_datas)
+    print("Meter testing successful, here are the results (in order):")
+    for i in range(len(results)):
+        tup = results[i]
+        meter = tup[0]
+        result = tup[1]
+        name = str(meter)
+        if meter.name is not None:
+            name = meter.name
+
+        print("(#{}) Meter \"{}\": Mean {}, STD-DEV {}.".format(
+            i + 1, name, result[0], result[1]))
+
+
+def run_demo():
+    meter = meter_from_file()
+    t_datas = training_data_from_file()
     print("Starting demo with SMeter {}".format(meter))
     meter.train(t_datas)
 
@@ -81,6 +116,17 @@ elif action == "demo":
 
     meter.set_handler(handler)
     meter.start_if_ready()
+
+
+# We have the meter object, now we can see what they want to do
+# with it.
+if action == "test":
+    if multiple is None:
+        test_single_meter()
+    else:
+        test_multiple_meters()
+elif action == "demo":
+    run_demo()
 else:
     parser.error("Unrecognized action \"{}\".".format(action))
     

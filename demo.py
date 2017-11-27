@@ -87,8 +87,67 @@ def create_smeter():
 
 
 def create_smeters():
-    pass
+    m1 = sm.SMeter()
     
+    sw = pp.StopWordsPreprocessor()
+    import nltk
+    stop = list(nltk.corpus.stopwords.words('english'))
+    sw.add_stop_words(stop)
+    sw_mod = sm.PreprocessorExtractorModule(sw)
+
+    ht = pp.HashtagPreprocessor()
+    ht_mod = sm.PreprocessorExtractorModule(ht)
+
+    mn = pp.MentionPreprocessor()
+    mn_mod = sm.PreprocessorExtractorModule(mn)
+
+    emo = pc.EmoticonSentimentFE()
+    emo.set_file(open("datasets/EmoticonSentimentLexicon.txt", 'r'))
+    emo_mod = sm.FeatureExtractorModule(emo)
+
+    ar = pc.AdjectiveRatioFE()
+    ar_mod = sm.FeatureExtractorModule(ar)
+
+    hc = pc.HashtagCountFE()
+    hc_mod = sm.FeatureExtractorModule(hc)
+
+    classifiers = [cl.AdaBoostModule,
+                   cl.DecisionTreeModule,
+                   cl.GaussianProcessModule,
+                   cl.KNeighborsModule,
+                   cl.LinearSVCModule,
+                   cl.MultinomialNBModule,
+                   cl.NBClassifierModule,
+                   cl.MLPModule,
+                   cl.NuSVCModule,
+                   cl.RadiusNeighborsModule,
+                   cl.SVCModule
+                   ]
+
+    meters = list()
+    for c in classifiers:
+        m = sm.SMeter()
+        m.add_preprocess_mod(sw_mod)
+        m.add_preprocess_mod(ht_mod)
+        m.add_preprocess_mod(mn_mod)
+        m.add_preclass_mod(emo_mod)
+        m.add_preclass_mod(ar_mod)
+        m.add_preclass_mod(hc_mod)
+        m.set_class_mod(c())
+
+        # We can name the classifier so that when it is printed
+        # it doesn't clog everything up.
+        c_inst = m.class_mod
+        name = str(type(c_inst)).strip("<>'")
+        name = name.split('.')
+        name = name[len(name) - 1]
+        name += " classifier"
+        m.name = name
+
+        meters.append(m)
+
+    return meters
+
 
 def training_data():
     n = 500
@@ -126,7 +185,7 @@ def training_data():
 #         for fe in f:
 #             if fe == pc.EmoticonSentimentFE:
 #                 inst = fe()
-#                 inst.set_file(open("datasets/EmoticonSentimentLexicon.txt", 'r'))
+
 #                 c.add_mod(sm.FeatureExtractorModule(inst))
 #             else:
 #                 c.add_mod(sm.FeatureExtractorModule(fe()))

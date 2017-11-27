@@ -26,17 +26,16 @@ class ValidationTest():
     def test_meters(self, meters, data):
         """
         Tests the list of meters for accuracy and then returns
-        them in a sorted order.
+        them in a sorted order along with their meter.
 
-        Similar to above, this is not implemented and should not
-        be called, and is only included to serve as documentation
-        for subclassing.
+        Example, the returned object should look something like this:
+        [(meter_object, result), (m2, r2), (m3, r3)]
         """
         results = list()
         for m in meters:
             r = self.test_meter(m, data)
             results.append((m, r))
-        return sorted(results, key=lambda r: r[1][0])
+        return sorted(results, key=lambda r: r[1][0], reverse=True)
 
 
 class KFoldValidationTest(ValidationTest):
@@ -67,16 +66,10 @@ class KFoldValidationTest(ValidationTest):
             features.append(t_features)
         features = np.asarray(features)
 
-        print("KFoldValidationTest finished extracting features from \
-test data.")
-
-
         # Run the cross validation on the chain
         classifier = meter.class_mod.classifier
         scores = cross_val_score(classifier, features,
                                  sentiments, cv=self.n_folds)
-
-        print("Finished cross validation.")
 
         mean = scores.mean()
         std_dev = scores.std()
