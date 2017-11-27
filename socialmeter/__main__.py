@@ -6,7 +6,7 @@
 import argparse
 import importlib
 
-from socialmeter.testsuite import kfold
+from socialmeter.testsuite import kfold, grid_search
 
 parser = argparse.ArgumentParser(
     prog="SocialMeter",
@@ -76,6 +76,16 @@ def training_data_from_file():
     return t_datas
 
 
+def grid_search_params():
+    params = None
+    if hasattr(i, "grid_search_params"):
+        params = i.grid_search_params()
+    else:
+        parser.error("Could not find function \"grid_search_params\" in the \
+input file \"{}\". Please define the function in your file".format(filename))
+    return params
+
+
 def test_single_meter():
     meter = meter_from_file()
     t_datas = training_data_from_file()
@@ -89,7 +99,8 @@ def test_single_meter():
 def test_multiple_meters():
     meters = meters_from_file()
     t_datas = training_data_from_file()
-    print("Starting test with {} SMeters.".format(len(meters)))
+    print("Starting test with {} SMeters and {} data points."
+          .format(len(meters), len(t_datas)))
     k = kfold.KFoldValidationTest()
     results = k.test_meters(meters, t_datas)
     print("Meter testing successful, here are the results (in order):")
@@ -103,6 +114,30 @@ def test_multiple_meters():
 
         print("(#{}) Meter \"{}\": Mean {}, STD-DEV {}.".format(
             i + 1, name, result[0], result[1]))
+
+        diff = len(meters) - len(result)
+        if diff != 0:
+            print("It seems that {} meters encountered errors in \
+            being tested.".format(diff))
+
+
+def grid_search_meter():
+    meter = meter_from_file()
+    t_datas = training_data_from_file()
+    parameters = grid_search_params()
+    print("Starting grid search with SMeter from file.")
+    print("Meter object: {}".format(meter))
+    grid = grid_search.GridSearch(parameters)
+
+    results = grid.search_meter(meter, t_datas)
+
+    print("Here are the results in descending order, \
+sorted by mean_test_score:")
+    for i in range(len(results)):
+        result = results[i]
+        print("(#{}) Params: {},\nmean_test_score: {}, std_dev: {}"
+              .format(i, result['params'], result['mean_test_score'],
+                      result['std_test_score']))
 
 
 def run_demo():
@@ -125,8 +160,9 @@ if action == "test":
         test_single_meter()
     else:
         test_multiple_meters()
+elif action == "grid-search":
+    grid_search_meter()
 elif action == "demo":
     run_demo()
 else:
     parser.error("Unrecognized action \"{}\".".format(action))
-    

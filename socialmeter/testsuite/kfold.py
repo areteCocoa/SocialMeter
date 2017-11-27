@@ -33,8 +33,12 @@ class ValidationTest():
         """
         results = list()
         for m in meters:
-            r = self.test_meter(m, data)
-            results.append((m, r))
+            try:
+                r = self.test_meter(m, data)
+                results.append((m, r))
+            except:
+                print("Error in testing meter {}. It will be reflected \
+                in the results.".format(m))
         return sorted(results, key=lambda r: r[1][0], reverse=True)
 
 

@@ -76,7 +76,7 @@ def create_smeter():
     meter.add_preclass_mod(exc)
 
     # Load the classification module with data
-    nbc = cl.AdaBoostModule()
+    nbc = cl.DecisionTreeModule()
     meter.set_class_mod(nbc)
 
     # Load the output module with data
@@ -87,8 +87,6 @@ def create_smeter():
 
 
 def create_smeters():
-    m1 = sm.SMeter()
-    
     sw = pp.StopWordsPreprocessor()
     import nltk
     stop = list(nltk.corpus.stopwords.words('english'))
@@ -121,8 +119,7 @@ def create_smeters():
                    cl.MLPModule,
                    cl.NuSVCModule,
                    cl.RadiusNeighborsModule,
-                   cl.SVCModule
-                   ]
+                   cl.SVCModule]
 
     meters = list()
     for c in classifiers:
@@ -153,6 +150,16 @@ def training_data():
     n = 500
     training_datas = load_dataset(n)
     return training_datas
+
+
+def grid_search_params():
+    params = {
+        "splitter": ["best", "random"],
+        "criterion": ["gini", "entropy"],
+        "max_depth": [None, 5, 20, 100]
+        }
+    return params
+
 
 # elif opt == "cmp":
 #     preproc  = {pp.HashtagPreprocessor, pp.MentionPreprocessor,

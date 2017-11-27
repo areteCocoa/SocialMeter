@@ -6,4 +6,5 @@
 # Note: This is not a suite of unit tests for the accuracy
 # of the code, that is found in the root directory in 'tests'.
 
+from . import grid_search
 from . import kfold

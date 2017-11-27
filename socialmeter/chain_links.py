@@ -337,7 +337,7 @@ class SMeter:
     def extract_features(self, texts):
         features = list()
         for t in texts:
-            f = self.extract_single_features(self, t)
+            f = self.extract_single_features(t)
             features.append(f)
         return features
 
