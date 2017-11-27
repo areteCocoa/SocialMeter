@@ -76,7 +76,7 @@ def create_smeter():
     meter.add_preclass_mod(exc)
 
     # Load the classification module with data
-    nbc = cl.NBClassifierModule()
+    nbc = cl.AdaBoostModule()
     meter.set_class_mod(nbc)
 
     # Load the output module with data
@@ -85,6 +85,10 @@ def create_smeter():
 
     return meter
 
+
+def create_smeters():
+    pass
+    
 
 def training_data():
     n = 500

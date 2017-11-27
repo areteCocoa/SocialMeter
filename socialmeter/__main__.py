@@ -20,10 +20,13 @@ parser.add_argument('filename', metavar='filename', type=str,
 parser.add_argument('action', metavar='action', type=str,
                     help='The action to be performed on the chain(s). \
                     Availble actions include: \"test\", \"demo\".')
-
+parser.add_argument('--multiple', action='store_const', const='multiple',
+                    help='Test multiple meter objects from the file. Note \
+                    the file must implement \`create_smeters\'')
 
 args = parser.parse_args()
 action = args.action
+multiple = args.multiple
 filename = args.filename
 
 modulename = filename.split('.')[0]
@@ -60,12 +63,15 @@ else:
 # We have the meter object, now we can see what they want to do
 # with it.
 if action == "test":
-    print("Starting test with SMeter {}".format(meter))
-    kfold_test = kfold.KFoldValidationTest()
-    print("Created KFold validation test.")
-    results = kfold_test.test_meter(meter, t_datas)
-    print("SMeter has {}% accuracy with a std-dev of {}."
-          .format(results[0], results[1]))
+    if multiple is None:
+        print("Starting test with SMeter {}".format(meter))
+        kfold_test = kfold.KFoldValidationTest()
+        print("Created KFold validation test.")
+        results = kfold_test.test_meter(meter, t_datas)
+        print("SMeter has {}% accuracy with a std-dev of {}."
+              .format(results[0], results[1]))
+    else:
+        print("Succees!")
 elif action == "demo":
     print("Starting demo with SMeter {}".format(meter))
     meter.train(t_datas)
@@ -74,7 +80,6 @@ elif action == "demo":
         print("({}): {}".format(data["classification"], data["text"]))
 
     meter.set_handler(handler)
-
     meter.start_if_ready()
 else:
     parser.error("Unrecognized action \"{}\".".format(action))

@@ -65,7 +65,10 @@ class PreprocessorExtractorModule(Module):
     """
     def __init__(self, preprocessor):
         self.preprocess_extractor = preprocessor
-        self.key = "{}".format(preprocessor)
+        if hasattr(preprocessor, "key"):
+            self.key = preprocessor.key
+        else:
+            self.key = "{}".format(preprocessor)
 
     def set_key(self, key):
         self.key = key
@@ -400,9 +403,13 @@ class SMeter:
     #  Overriding `Object` methods (excluding __init__)
 
     def __str__(self):
-        s = "{}:\n".format(hex(id(self)))
-        s += "\tcolumn_format: {}\n".format(self.column_format)
-        # TODO: Print the input mod, the preprocess link, etc.
+        s = "<{}>:\n".format(hex(id(self)))
+        s += "\tcolumn_format: {},".format(self.column_format)
+        s += "\tinput: {},\n".format(self.input_mod)
+        s += "\tpreprocessors: {},\n".format(self.preprocess_link)
+        s += "\tpreclassifiers: {},\n".format(self.preclass_link)
+        s += "\tclassifier: {},\n,".format(self.class_mod)
+        s += "\toutput: {}".format(self.output_mod)
         return s
 
     #  Getters, setters and adders

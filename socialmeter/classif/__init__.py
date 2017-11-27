@@ -10,3 +10,4 @@ from .nbclassifier import NBClassifierModule
 from .neural_net import MLPModule
 from .nu_svc import NuSVCModule
 from .radius_neighbors import RadiusNeighborsModule
+from .svc import SVCModule

@@ -1,13 +1,18 @@
 # adaboost.py
 
-from ..chain_links import Module
+from .base import SKLearnClassifierModule
+
+from sklearn.ensemble import AdaBoostClassifier
 
 
-class AdaBoostModule(Module):
+class AdaBoostModule(SKLearnClassifierModule):
     """
     The AdaBoostModule uses the AdaBoost ensemble classifier
     in conjunction with other classifier modules.
+
+    Note: the module is initialized with a DecisionTreeClassifier
+    by default.
     """
     def __init__(self):
-        self.classifier = None  # TODO
-
+        super().__init__()
+        self.classifier = AdaBoostClassifier()
