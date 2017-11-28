@@ -1,5 +1,7 @@
 # chain-links.py
 
+import pandas as pd
+
 
 class Module:
     """
@@ -369,9 +371,28 @@ class SMeter:
     def new_input(self, input_data):
         """
         Called when there is new input from the input module.
+
+        input_data should be either a list of dictionaries or a single
+        dictionary containing "information of value" (username, location,
+        text, etc.).
+
+        It is the responsibility of this method to use column_format
+        to set which properties are important enough to
+        be used and which will be not. It is also responsible for fitting
+        the object into a pandas Series object.
         """
-        print(input_data)
-        data = self.preprocess_link.process(input_data)
+        # Format the input_data to only fit column_format, and then
+        # convert it to a pandas Series object
+        formatted = dict()
+        for k in self.column_format:
+            if k in input_data.keys():
+                formatted[k] = input_data[k]
+                print(k + " " + formatted[k])
+        series = pd.Series(data=formatted, index=self.column_format,
+                           dtype=object)
+
+        # Feed the Series through the preprocessor link
+        data = self.preprocess_link.process(series)
         self.preprocess_finished(data)
 
     def preprocess_finished(self, data):

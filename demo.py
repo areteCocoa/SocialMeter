@@ -48,12 +48,22 @@ def create_smeter():
     meter = sm.SMeter()
     meter.set_column_format(["username", "text", "classification"])
 
-    # Load JSON configuration add use it to configure the TSModule
-    twitter_config_filename = "configs/config.json"
-    ts = inp.twitterstream.TwitterStreamModule()
-    ts.load_config(twitter_config_filename)
-    ts.set_term("Donald Trump")
-    meter.set_input_mod(ts)
+    # Set to true to use the TwitterStreamModule, false to use the
+    # FacebookGraphModule
+    twitter = False
+
+    config_filename = "configs/config.json"
+    if twitter:
+        # Load JSON configuration add use it to configure the TSModule
+        ts = inp.twitterstream.TwitterStreamModule()
+        ts.load_config(config_filename)
+        ts.set_term("Donald Trump")
+        meter.set_input_mod(ts)
+    else:
+        # Load the config file to the module
+        fb = inp.FacebookGraphModule()
+        fb.load_config(config_filename)
+        meter.set_input_mod(fb)
 
     # Load the preprocess modules
     sw = pp.StopWordsPreprocessor()

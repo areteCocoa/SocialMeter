@@ -57,19 +57,7 @@ class TwitterStreamModule(InputModule, StreamListener):
 
     def parse_response(self, response):
         parsed = json.loads(response)
-        if self.column_format() is None:
-            print("Warning: did not find a column format for\
- TwitterStreamModule, using all the keys from the Twitter objects")
-            self.set_column_format(parsed.keys())
-        series_data = dict()
-        for k in self.column_format():
-            if k in parsed.keys():
-                series_data[k] = parsed[k]
-            elif self.allow_empty is False and k == "text":
-                return
-        df = pd.Series(series_data)
-
-        self.handler(df)
+        self.handler(parsed)
 
     # StreamListener
     def on_data(self, data):
