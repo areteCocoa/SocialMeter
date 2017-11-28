@@ -89,14 +89,18 @@ def create_smeter():
     nbc = cl.DecisionTreeModule()
     meter.set_class_mod(nbc)
 
-    use_out_mod = False
-    # Load the output module with data
-    if use_out_mod:
-        out_mod = out.OutputModule()
-        meter.set_output_mod(out_mod)
-    else:
-        cloud_mod = out.TextCloudModule()
-        meter.set_output_mod(cloud_mod)
+    out_mods = [out.OutputModule, out.TextCloudModule,
+                out.SQLiteModule]
+    out_i = 2
+    out_mod = out_mods[out_i]()
+    if type(out_mod) == out.SQLiteModule:
+        db_filename = "databases/sentiments.db"
+        try:
+            open(db_filename)
+        except:
+            out_mod.setup_db(db_filename)
+        out_mod.connect_to_db(db_filename)
+    meter.set_output_mod(out_mod)
 
     return meter
 
