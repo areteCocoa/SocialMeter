@@ -387,7 +387,8 @@ class SMeter:
         for k in self.column_format:
             if k in input_data.keys():
                 formatted[k] = input_data[k]
-                print(k + " " + formatted[k])
+        if 'text' not in formatted.keys():
+            formatted['text'] = ""
         series = pd.Series(data=formatted, index=self.column_format,
                            dtype=object)
 

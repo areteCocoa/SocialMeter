@@ -147,7 +147,10 @@ def run_demo():
     meter.train(t_datas)
 
     def handler(data):
-        print("({}): {}".format(data["classification"], data["text"]))
+        # Check if it is None -- if it is None, it's likely that
+        # the output module has taken care of the data
+        if data is not None:
+            print("({}): {}".format(data["classification"], data["text"]))
 
     meter.set_handler(handler)
     meter.start_if_ready()

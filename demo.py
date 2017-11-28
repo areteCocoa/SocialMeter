@@ -50,7 +50,7 @@ def create_smeter():
 
     # Set to true to use the TwitterStreamModule, false to use the
     # FacebookGraphModule
-    twitter = False
+    twitter = True
 
     config_filename = "configs/config.json"
     if twitter:
@@ -89,9 +89,14 @@ def create_smeter():
     nbc = cl.DecisionTreeModule()
     meter.set_class_mod(nbc)
 
+    use_out_mod = False
     # Load the output module with data
-    out_mod = out.OutputModule()
-    meter.set_output_mod(out_mod)
+    if use_out_mod:
+        out_mod = out.OutputModule()
+        meter.set_output_mod(out_mod)
+    else:
+        cloud_mod = out.TextCloudModule()
+        meter.set_output_mod(cloud_mod)
 
     return meter
 
