@@ -28,6 +28,6 @@ six==1.10.0
 sklearn==0.0
 -e git+https://github.com/areteCocoa/SocialMeter.git@c8e026ea467587bf50352d8f5787ecbc8e9c27b8#egg=socialmeter
 tweepy==3.5.0
-urllib3==1.22
+urllib3==1.26.5
 virtualenv==15.1.0
 yapf==0.20.0
